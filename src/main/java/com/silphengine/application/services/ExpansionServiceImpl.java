@@ -4,6 +4,8 @@ import com.silphengine.application.mappers.ExpansionMapper;
 import com.silphengine.domain.dto.requests.ExpansionRequest;
 import com.silphengine.domain.dto.responses.ExpansionResponse;
 import com.silphengine.domain.entities.Expansion;
+import com.silphengine.domain.exceptions.DuplicateResourceException;
+import com.silphengine.domain.exceptions.ResourceNotFoundException;
 import com.silphengine.domain.services.ExpansionService;
 import com.silphengine.infrastructure.repositories.ExpansionRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +26,7 @@ public class ExpansionServiceImpl implements ExpansionService {
 
         expansionRepository.findByExternalId(expansionRequest.externalId())
                 .ifPresent(e -> {
-                    throw new RuntimeException("Expansion already exists with ID: " + expansionRequest.externalId());
+                    throw new DuplicateResourceException("Expansion already exists with ID: " + expansionRequest.externalId());
                 });
 
         return expansionMapper.toResponse(expansionRepository.save(expansionMapper.toEntity(expansionRequest)));
@@ -33,7 +35,7 @@ public class ExpansionServiceImpl implements ExpansionService {
     @Override
     public ExpansionResponse getByExternalId(String externalId) {
         return expansionMapper.toResponse(expansionRepository.findByExternalId(externalId)
-                .orElseThrow(() -> new RuntimeException("Expansion with ID " + externalId + " not found")));
+                .orElseThrow(() -> new ResourceNotFoundException("Expansion with ID " + externalId + " not found")));
     }
 
     @Override
@@ -41,7 +43,7 @@ public class ExpansionServiceImpl implements ExpansionService {
     public void removeByExternalId(String externalId) {
 
         Expansion expansion =  expansionRepository.findByExternalId(externalId)
-                .orElseThrow(() -> new RuntimeException("Expansion with ID " + externalId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Expansion with ID " + externalId + " not found"));
 
         expansionRepository.delete(expansion);
     }
@@ -51,7 +53,7 @@ public class ExpansionServiceImpl implements ExpansionService {
     public ExpansionResponse updateByExternalId(ExpansionRequest expansionRequest) {
 
         Expansion expansion = expansionRepository.findByExternalId(expansionRequest.externalId())
-                .orElseThrow(() -> new RuntimeException("Expansion with ID " + expansionRequest.externalId() + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Expansion with ID " + expansionRequest.externalId() + " not found"));
 
         expansionMapper.updateEntityFromRequest(expansion, expansionRequest);
 

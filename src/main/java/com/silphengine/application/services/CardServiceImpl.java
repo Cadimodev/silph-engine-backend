@@ -5,6 +5,8 @@ import com.silphengine.domain.dto.requests.CardRequest;
 import com.silphengine.domain.dto.responses.CardResponse;
 import com.silphengine.domain.entities.Card;
 import com.silphengine.domain.entities.Expansion;
+import com.silphengine.domain.exceptions.DuplicateResourceException;
+import com.silphengine.domain.exceptions.ResourceNotFoundException;
 import com.silphengine.domain.services.CardService;
 import com.silphengine.infrastructure.repositories.CardRepository;
 import com.silphengine.infrastructure.repositories.ExpansionRepository;
@@ -31,11 +33,11 @@ public class CardServiceImpl implements CardService {
     public CardResponse createCard(CardRequest cardRequest) {
 
         Expansion expansion = expansionRepository.findByExternalId(cardRequest.expansionExternalId()).orElseThrow(
-                () -> new RuntimeException("Expansion with ID " + cardRequest.expansionExternalId() + " not found")
+                () -> new ResourceNotFoundException("Expansion with ID " + cardRequest.expansionExternalId() + " not found")
         );
 
         cardRepository.findByExternalId(cardRequest.externalId()) .ifPresent(e -> {
-            throw new RuntimeException("Card already exists with ID: " + cardRequest.externalId());
+            throw new DuplicateResourceException("Card already exists with ID: " + cardRequest.externalId());
         });
 
         return cardMapper.toResponse(cardRepository.save(cardMapper.toEntity(cardRequest, expansion)));
@@ -45,7 +47,7 @@ public class CardServiceImpl implements CardService {
     public CardResponse getByExternalId(String externalId) {
 
         return cardMapper.toResponse(cardRepository.findByExternalId(externalId).orElseThrow(
-                () -> new RuntimeException("Card with ID: " + externalId + " not found")
+                () -> new ResourceNotFoundException("Card with ID: " + externalId + " not found")
         ));
     }
 
@@ -63,11 +65,11 @@ public class CardServiceImpl implements CardService {
     public CardResponse updateByExternalId(CardRequest cardRequest) {
 
         Card card = cardRepository.findByExternalId(cardRequest.externalId())
-                .orElseThrow(() -> new RuntimeException("Card with ID: " + cardRequest.externalId() + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Card with ID: " + cardRequest.externalId() + " not found"));
 
         if (!card.getExpansion().getExternalId().equals(cardRequest.expansionExternalId())) {
             Expansion newExpansion = expansionRepository.findByExternalId(cardRequest.expansionExternalId())
-                    .orElseThrow(() -> new RuntimeException("New Expansion not found with ID: " + cardRequest.expansionExternalId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("New Expansion not found with ID: " + cardRequest.expansionExternalId()));
             card.setExpansion(newExpansion);
         }
 
@@ -81,7 +83,7 @@ public class CardServiceImpl implements CardService {
     public void deleteByExternalId(String externalId) {
 
         Card card = cardRepository.findByExternalId(externalId).orElseThrow(
-                () -> new RuntimeException("Card with ID: " + externalId + " not found")
+                () -> new ResourceNotFoundException("Card with ID: " + externalId + " not found")
         );
 
         cardRepository.delete(card);
