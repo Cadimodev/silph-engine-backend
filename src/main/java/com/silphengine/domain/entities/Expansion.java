@@ -11,14 +11,12 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@ToString
 @Getter
-@Setter
+@ToString
 public class Expansion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Setter(AccessLevel.NONE)
     private UUID id;
 
     @Column(name = "external_id", nullable = false, unique = true)
@@ -38,4 +36,12 @@ public class Expansion {
 
     @Column(name = "logo_url")
     private String logoUrl;
+
+    public void updateDetails(String name, String serieName, LocalDate releaseDate, int totalCards, String logoUrl) {
+        this.name = name;
+        this.serieName = serieName;
+        this.releaseDate = releaseDate;
+        this.totalCards = totalCards;
+        this.logoUrl = logoUrl;
+    }
 }

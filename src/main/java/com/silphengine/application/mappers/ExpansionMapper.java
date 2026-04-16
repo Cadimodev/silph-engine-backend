@@ -31,11 +31,12 @@ public class ExpansionMapper {
     }
 
     public void updateEntityFromRequest(Expansion expansion, ExpansionRequest expansionRequest) {
-
-        expansion.setName(expansionRequest.name());
-        expansion.setSerieName(expansionRequest.serieName());
-        expansion.setReleaseDate(expansionRequest.releaseDate());
-        expansion.setTotalCards(expansionRequest.totalCards());
-        expansion.setLogoUrl(expansionRequest.logoUrl());
+        expansion.updateDetails(
+                expansionRequest.name(),
+                expansionRequest.serieName(),
+                expansionRequest.releaseDate(),
+                expansionRequest.totalCards(),
+                expansionRequest.logoUrl()
+        );
     }
 }

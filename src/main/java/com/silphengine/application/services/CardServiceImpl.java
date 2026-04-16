@@ -5,6 +5,7 @@ import com.silphengine.domain.dto.requests.CardRequest;
 import com.silphengine.domain.dto.responses.CardResponse;
 import com.silphengine.domain.entities.Card;
 import com.silphengine.domain.entities.Expansion;
+import com.silphengine.domain.exceptions.BadRequestException;
 import com.silphengine.domain.exceptions.DuplicateResourceException;
 import com.silphengine.domain.exceptions.ResourceNotFoundException;
 import com.silphengine.domain.services.CardService;
@@ -78,9 +79,9 @@ public class CardServiceImpl implements CardService {
                 .orElseThrow(() -> new ResourceNotFoundException("Card with ID: " + externalId + " not found"));
 
         if (!card.getExpansion().getExternalId().equals(cardRequest.expansionExternalId())) {
-            Expansion newExpansion = expansionRepository.findByExternalId(cardRequest.expansionExternalId())
-                    .orElseThrow(() -> new ResourceNotFoundException("New Expansion not found with ID: " + cardRequest.expansionExternalId()));
-            card.setExpansion(newExpansion);
+            throw new BadRequestException("A card's expansion cannot be changed. The request's expansion ID ("
+                    + cardRequest.expansionExternalId() + ") does not match the existing card's expansion ID ("
+                    + card.getExpansion().getExternalId() + ").");
         }
 
         cardMapper.updateEntityFromRequest(card, cardRequest);

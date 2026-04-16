@@ -1,7 +1,6 @@
 package com.silphengine.application.mappers;
 
 import com.silphengine.domain.dto.requests.CardRequest;
-import com.silphengine.domain.dto.requests.ExpansionRequest;
 import com.silphengine.domain.dto.responses.CardResponse;
 import com.silphengine.domain.entities.Card;
 import com.silphengine.domain.entities.Expansion;
@@ -42,12 +41,16 @@ public class CardMapper {
     }
 
     public void updateEntityFromRequest(Card card, CardRequest cardRequest) {
+        CardCategory mappedCategory = mapStringToCardCategory(cardRequest.cardCategory());
+        List<CardType> mappedTypes = mapStringsToTypes(cardRequest.types());
 
-        card.setName(cardRequest.name());
-        card.setRarity(cardRequest.rarity());
-        card.setCardCategory(mapStringToCardCategory(cardRequest.cardCategory()));
-        card.setTypes(mapStringsToTypes(cardRequest.types()));
-        card.setImageUrl(cardRequest.imageUrl());
+        card.updateDetails(
+                cardRequest.name(),
+                cardRequest.rarity(),
+                mappedCategory,
+                mappedTypes,
+                cardRequest.imageUrl()
+        );
     }
 
     private CardCategory mapStringToCardCategory(String cardCategoryString) {

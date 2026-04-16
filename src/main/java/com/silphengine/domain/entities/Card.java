@@ -14,19 +14,17 @@ import java.util.UUID;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Getter
-@Setter
 @ToString
 public class Card {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Setter(AccessLevel.NONE)
     private UUID id;
 
     @Column(name = "external_id", nullable = false, unique = true)
     private String externalId;
 
-    @Column(name = "name", nullable = false)
+    @Column(nullable = false)
     private String name;
 
     @Column(name = "image_url")
@@ -36,17 +34,26 @@ public class Card {
     @CollectionTable(name = "card_types", joinColumns = @JoinColumn(name = "card_id"))
     @Column(name = "type_name")
     @Enumerated(EnumType.STRING)
+    @ToString.Exclude
     private List<CardType> types;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "expansion_id", nullable = false)
-    Expansion expansion;
+    @ToString.Exclude
+    private Expansion expansion;
 
-    @Column(name = "rarity", nullable = false)
+    @Column(nullable = false)
     private String rarity;
 
-    @Column(name = "category", nullable = false)
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private CardCategory cardCategory;
 
+    public void updateDetails(String name, String rarity, CardCategory cardCategory, List<CardType> types, String imageUrl) {
+        this.name = name;
+        this.rarity = rarity;
+        this.cardCategory = cardCategory;
+        this.types = types;
+        this.imageUrl = imageUrl;
+    }
 }
