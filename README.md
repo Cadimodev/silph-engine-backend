@@ -54,7 +54,7 @@ classDiagram
     Card: -List~String~ types
     Card: -Expansion expansion
     Card: -String rarity
-    Card: -String category
+    Card: -String cardCategory
 
     Expansion: -UUID id
     Expansion: -String externalId
