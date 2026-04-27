@@ -67,7 +67,7 @@ public class ExpansionControllerTest {
 
         // When & Then
         mockMvc.perform(post("/api/v1/expansions")
-                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -91,7 +91,7 @@ public class ExpansionControllerTest {
 
         // When & Then
         mockMvc.perform(post("/api/v1/expansions")
-                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
@@ -113,7 +113,7 @@ public class ExpansionControllerTest {
 
         // When & Then
         mockMvc.perform(post("/api/v1/expansions")
-                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
     }
