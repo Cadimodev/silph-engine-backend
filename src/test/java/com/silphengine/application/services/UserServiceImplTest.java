@@ -1,6 +1,7 @@
 package com.silphengine.application.services;
 
 import com.silphengine.application.mappers.UserMapper;
+import com.silphengine.application.mappers.UserMapperImpl;
 import com.silphengine.domain.dto.requests.PasswordChangeRequest;
 import com.silphengine.domain.dto.requests.UserProfileRequest;
 import com.silphengine.domain.dto.requests.UserRequest;
@@ -50,7 +51,7 @@ public class UserServiceImplTest {
     @BeforeEach
     void setUp() {
 
-        userMapper = new UserMapper();
+        userMapper = new UserMapperImpl();
         userService = new UserServiceImpl(userRepository, userMapper, passwordEncoder);
 
         nickname = "testuser";

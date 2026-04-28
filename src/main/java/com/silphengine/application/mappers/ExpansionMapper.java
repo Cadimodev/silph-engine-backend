@@ -3,34 +3,24 @@ package com.silphengine.application.mappers;
 import com.silphengine.domain.dto.requests.ExpansionRequest;
 import com.silphengine.domain.dto.responses.ExpansionResponse;
 import com.silphengine.domain.entities.Expansion;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
-@Component
-public class ExpansionMapper {
+@Mapper
+public interface ExpansionMapper {
 
-    public Expansion toEntity(ExpansionRequest request) {
-        return Expansion.builder()
-                .externalId(request.externalId())
-                .name(request.name())
-                .serieName(request.serieName())
-                .releaseDate(request.releaseDate())
-                .totalCards(request.totalCards())
-                .logoUrl(request.logoUrl())
-                .build();
-    }
+    @Mapping(target = "id", ignore = true)
+    Expansion toEntity(ExpansionRequest request);
 
-    public ExpansionResponse toResponse(Expansion expansion) {
-        return new ExpansionResponse(
-                expansion.getExternalId(),
-                expansion.getName(),
-                expansion.getSerieName(),
-                expansion.getReleaseDate(),
-                expansion.getTotalCards(),
-                expansion.getLogoUrl()
-        );
-    }
+    ExpansionResponse toResponse(Expansion expansion);
 
-    public void updateEntityFromRequest(Expansion expansion, ExpansionRequest expansionRequest) {
+    default void updateEntityFromRequest(Expansion expansion, ExpansionRequest expansionRequest) {
+
+        if (expansion == null || expansionRequest == null) {
+            return;
+        }
+
         expansion.updateDetails(
                 expansionRequest.name(),
                 expansionRequest.serieName(),

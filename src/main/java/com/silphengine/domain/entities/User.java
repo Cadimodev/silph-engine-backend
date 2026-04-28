@@ -73,6 +73,10 @@ public class User implements UserDetails {
         card.setOwner(null);
     }
 
+    public void assignDefaultRole() {
+        role = Role.USER;
+    }
+
     @Override
     @Nonnull
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -108,4 +112,5 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
 }

@@ -1,6 +1,7 @@
 package com.silphengine.application.services;
 
 import com.silphengine.application.mappers.CardMapper;
+import com.silphengine.application.mappers.CardMapperImpl;
 import com.silphengine.domain.dto.requests.CardRequest;
 import com.silphengine.domain.dto.responses.CardResponse;
 import com.silphengine.domain.entities.Card;
@@ -52,7 +53,7 @@ public class CardServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        CardMapper cardMapper = new CardMapper();
+        CardMapper cardMapper = new CardMapperImpl();
         cardService = new CardServiceImpl(cardMapper, cardRepository, expansionRepository);
 
         externalExpansionId = "sv02";

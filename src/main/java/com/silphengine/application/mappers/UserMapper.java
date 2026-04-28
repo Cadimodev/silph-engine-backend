@@ -5,31 +5,30 @@ import com.silphengine.domain.dto.requests.UserRequest;
 import com.silphengine.domain.dto.responses.UserResponse;
 import com.silphengine.domain.enums.Role;
 import com.silphengine.domain.entities.User;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
-@Component
-public class UserMapper {
+@Mapper
+public interface UserMapper {
 
-    public User toEntity(UserRequest userRequest, String encodedPassword) {
-       return  User.builder()
-               .nickname(userRequest.nickname())
-               .email(userRequest.email())
-               .password(encodedPassword)
-               .role(Role.USER)
-               .build();
-    }
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "collection", ignore = true)
+    @Mapping(target = "decks", ignore = true)
+    @Mapping(target = "role", ignore = true)
+    @Mapping(target = "password", source = "encodedPassword")
+    User toEntity(UserRequest userRequest, String encodedPassword);
 
-    public UserResponse toResponse(User user) {
+    @Mapping(target = "created", source = "user.createdAt")
+    UserResponse toResponse(User user);
 
-        return new UserResponse(
-                user.getId(),
-                user.getNickname(),
-                user.getEmail(),
-                user.getCreatedAt()
-        );
-    }
+    default void updateEntityFromRequest(User user, UserProfileRequest userProfileRequest) {
 
-    public void updateEntityFromRequest(User user, UserProfileRequest userProfileRequest) {
+        if (user == null || userProfileRequest == null) {
+            return;
+        }
+
         user.updateProfile(userProfileRequest.nickname(), userProfileRequest.email());
     }
 }

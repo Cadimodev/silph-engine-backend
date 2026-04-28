@@ -44,6 +44,7 @@ public class UserServiceImpl implements UserService {
 
         String encodedPassword = passwordEncoder.encode(userRequest.password());
         User user = userMapper.toEntity(userRequest, encodedPassword);
+        user.assignDefaultRole();
 
         // saveAndFlush to force immediate synchronization with the database,
         // which populates the @CreationTimestamp field.

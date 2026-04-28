@@ -1,6 +1,7 @@
 package com.silphengine.application.services;
 
 import com.silphengine.application.mappers.ExpansionMapper;
+import com.silphengine.application.mappers.ExpansionMapperImpl;
 import com.silphengine.domain.dto.requests.ExpansionRequest;
 import com.silphengine.domain.dto.responses.ExpansionResponse;
 import com.silphengine.domain.entities.Expansion;
@@ -37,7 +38,7 @@ class ExpansionServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        ExpansionMapper expansionMapper = new ExpansionMapper();
+        ExpansionMapper expansionMapper = new ExpansionMapperImpl();
         expansionService = new ExpansionServiceImpl(expansionRepository, expansionMapper);
 
         externalId = "sv02";
