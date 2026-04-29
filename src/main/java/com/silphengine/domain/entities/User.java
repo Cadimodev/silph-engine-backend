@@ -73,6 +73,16 @@ public class User implements UserDetails {
         card.setOwner(null);
     }
 
+    public void addDeck(Deck deck) {
+        decks.add(deck);
+        deck.setOwner(this);
+    }
+
+    public void removeDeck(Deck deck) {
+        decks.remove(deck);
+        deck.setOwner(null);
+    }
+
     public void assignDefaultRole() {
         role = Role.USER;
     }
