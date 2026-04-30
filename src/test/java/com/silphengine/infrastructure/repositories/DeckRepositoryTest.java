@@ -32,9 +32,6 @@ public class DeckRepositoryTest extends AbstractRepositoryIntegrationTest {
     private CardRepository cardRepository;
 
     @Autowired
-    private DeckCardRepository deckCardRepository;
-
-    @Autowired
     private TestEntityManager entityManager;
 
     @Test
