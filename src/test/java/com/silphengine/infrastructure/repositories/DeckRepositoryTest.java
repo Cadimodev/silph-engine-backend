@@ -53,7 +53,6 @@ public class DeckRepositoryTest extends AbstractRepositoryIntegrationTest {
         // When
         List<Deck> foundDecks = deckRepository.findByOwnerId(user.getId());
 
-
         // Then
         assertThat(foundDecks).isNotEmpty();
         assertThat(foundDecks).hasSize(1);
@@ -104,7 +103,6 @@ public class DeckRepositoryTest extends AbstractRepositoryIntegrationTest {
         // When
         Optional<Deck> foundDeck = deckRepository.findByOwnerIdAndName(user.getId(), deckName);
 
-
         // Then
         assertThat(foundDeck).isPresent();
         assertThat(foundDeck.get().getOwner().getId()).isEqualTo(user.getId());
@@ -127,7 +125,6 @@ public class DeckRepositoryTest extends AbstractRepositoryIntegrationTest {
     @Test
     void findByOwnerIdAndName_shouldReturnEmpty_whenDeckDoesNotExists() {
 
-        // Given
         // Given
         User user = User.builder()
                 .nickname("testuser")
