@@ -1,16 +1,21 @@
 package com.silphengine.infrastructure.repositories;
 
+import com.silphengine.domain.entities.Deck;
 import com.silphengine.domain.entities.User;
 import com.silphengine.domain.enums.Role;
 import com.silphengine.infrastructure.AbstractRepositoryIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.dao.DataIntegrityViolationException;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.shouldHaveThrown;
 
 
 public class UserRepositoryTest extends AbstractRepositoryIntegrationTest {
@@ -18,20 +23,61 @@ public class UserRepositoryTest extends AbstractRepositoryIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private DeckRepository deckRepository;
+
+    @Autowired
+    private TestEntityManager entityManager;
+
+    @Test
+    void save_shouldThrowException_whenNicknameAlreadyExists() {
+
+        // Given
+        String duplicateNickname = "duplicateNickname";
+        User firstUser = createDefaultUser(duplicateNickname, "test1@user.com");
+        userRepository.saveAndFlush(firstUser);
+
+        User secondUser = createDefaultUser(duplicateNickname, "test2@user.com");
+
+        // When & Then
+        assertThatThrownBy(() -> userRepository.saveAndFlush(secondUser))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void save_shouldThrowException_whenEmailAlreadyExists() {
+
+        // Given
+        String duplicateEmail = "duplicateEmail@user.com";
+        User firstUser = createDefaultUser("testuser1", duplicateEmail);
+        userRepository.saveAndFlush(firstUser);
+
+        User secondUser = createDefaultUser("testuser2", duplicateEmail);
+
+        // When & Then
+        assertThatThrownBy(() -> userRepository.saveAndFlush(secondUser))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void save_shouldAutoGenerateCreatedAt_whenNewUserIsSaved() {
+
+        // Given
+        User user = createDefaultUser("testuser", "test@user.com");
+
+        // When
+        User savedUser = userRepository.saveAndFlush(user);
+
+        // Then
+        assertThat(savedUser.getCreatedAt()).isNotNull();
+    }
+
     @Test
     void findByNickname_shouldFindUser_whenUserExists() {
 
         // Given
         String nickname = "testuser";
-        User user = User.builder()
-                .nickname(nickname)
-                .email("test@user.com")
-                .password("Password1234!")
-                .role(Role.USER)
-                .createdAt(LocalDateTime.now())
-                .collection(new ArrayList<>())
-                .decks(new ArrayList<>())
-                .build();
+        User user = createDefaultUser(nickname, "test@user.com");
 
         userRepository.save(user);
 
@@ -58,15 +104,7 @@ public class UserRepositoryTest extends AbstractRepositoryIntegrationTest {
 
         // Given
         String email = "test@user.com";
-        User user = User.builder()
-                .nickname("testuser")
-                .email(email)
-                .password("Password1234!")
-                .role(Role.USER)
-                .createdAt(LocalDateTime.now())
-                .collection(new ArrayList<>())
-                .decks(new ArrayList<>())
-                .build();
+        User user = createDefaultUser("testuser", email);
 
         userRepository.save(user);
 
@@ -94,15 +132,7 @@ public class UserRepositoryTest extends AbstractRepositoryIntegrationTest {
         // Given
         String nickname = "testuser";
         String email = "test@user.com";
-        User user = User.builder()
-                .nickname(nickname)
-                .email(email)
-                .password("Password1234!")
-                .role(Role.USER)
-                .createdAt(LocalDateTime.now())
-                .collection(new ArrayList<>())
-                .decks(new ArrayList<>())
-                .build();
+        User user = createDefaultUser(nickname, email);
 
         userRepository.save(user);
 
@@ -130,15 +160,7 @@ public class UserRepositoryTest extends AbstractRepositoryIntegrationTest {
 
         // Given
         String nickname = "testuser";
-        User user = User.builder()
-                .nickname(nickname)
-                .email("test@user.com")
-                .password("Password1234!")
-                .role(Role.USER)
-                .createdAt(LocalDateTime.now())
-                .collection(new ArrayList<>())
-                .decks(new ArrayList<>())
-                .build();
+        User user = createDefaultUser(nickname, "test@user.com");
 
         userRepository.save(user);
 
@@ -164,15 +186,7 @@ public class UserRepositoryTest extends AbstractRepositoryIntegrationTest {
 
         // Given
         String email = "test@user.com";
-        User user = User.builder()
-                .nickname("testuser")
-                .email(email)
-                .password("Password1234!")
-                .role(Role.USER)
-                .createdAt(LocalDateTime.now())
-                .collection(new ArrayList<>())
-                .decks(new ArrayList<>())
-                .build();
+        User user = createDefaultUser("testuser", email);
 
         userRepository.save(user);
 
@@ -191,5 +205,50 @@ public class UserRepositoryTest extends AbstractRepositoryIntegrationTest {
 
         // Then
         assertThat(exists).isFalse();
+    }
+
+    @Test
+    void shouldRemoveDeckFromDatabase_whenDeckIsRemovedFromUserCollection() {
+
+        // Given
+        User user = createDefaultUser("testuser", "test@user.com");
+        Deck deck = Deck.builder()
+                .name("Eevee Box")
+                .owner(user)
+                .cards(new ArrayList<>())
+                .isLegal(false)
+                .build();
+
+        user.addDeck(deck);
+
+        userRepository.saveAndFlush(user);
+
+        UUID userId = user.getId();
+        UUID deckId = deck.getId();
+
+        entityManager.clear();
+
+        // When
+        User savedUser = userRepository.findById(userId).orElseThrow();
+        Deck deckToRemove = savedUser.getDecks().getFirst();
+        savedUser.removeDeck(deckToRemove);
+
+        userRepository.saveAndFlush(savedUser);
+        entityManager.clear();
+
+        Optional<Deck> deletedDeck = deckRepository.findById(deckId);
+
+        assertThat(deletedDeck).isEmpty();
+    }
+
+    private User createDefaultUser(String nickname, String email) {
+        return User.builder()
+                .nickname(nickname)
+                .email(email)
+                .password("Password1234!")
+                .role(Role.USER)
+                .collection(new ArrayList<>())
+                .decks(new ArrayList<>())
+                .build();
     }
 }
