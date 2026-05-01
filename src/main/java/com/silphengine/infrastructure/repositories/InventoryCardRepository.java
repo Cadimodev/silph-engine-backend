@@ -11,5 +11,5 @@ public interface InventoryCardRepository extends JpaRepository<InventoryCard, UU
 
     public List<InventoryCard> findByOwnerId(UUID ownerId);
 
-    public Optional<InventoryCard> findByOwnerIdAndCardId(UUID ownerId, UUID cardId);
+    public List<InventoryCard> findByOwnerIdAndCardId(UUID ownerId, UUID cardId);
 }
