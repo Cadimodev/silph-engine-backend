@@ -54,6 +54,10 @@ public class User implements UserDetails {
     @ToString.Exclude
     private List<Deck> decks = new ArrayList<>();
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private RefreshToken refreshToken;
+
     public void updateProfile(String nickname, String email) {
         this.nickname = nickname;
         this.email = email;
@@ -85,6 +89,20 @@ public class User implements UserDetails {
 
     public void assignDefaultRole() {
         role = Role.USER;
+    }
+
+    public void assignRefreshToken(RefreshToken token) {
+        this.refreshToken = token;
+        if (token != null) {
+            token.setUser(this);
+        }
+    }
+
+    public void removeRefreshToken() {
+        if (this.refreshToken != null) {
+            this.refreshToken.setUser(null);
+            this.refreshToken = null;
+        }
     }
 
     @Override

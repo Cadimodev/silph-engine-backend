@@ -22,10 +22,15 @@ public class RefreshToken {
     private String token;
 
     @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id", unique = true)
     private User user;
 
     @Setter
     @Column(nullable = false)
     private Instant expiryDate;
+
+    protected void setUser(User user) {
+        this.user = user;
+    }
+
 }

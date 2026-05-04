@@ -170,16 +170,19 @@ class RefreshTokenServiceImplTest {
     }
 
     @Test
-    void deleteByToken_shouldCallRepositoryDeleteByToken() {
+    void deleteByToken_shouldCallRepositoryDeleteAndRemoveFromUser() {
         // Given
         String tokenToDelete = "some-token-to-delete";
-        doNothing().when(refreshTokenRepository).deleteByToken(tokenToDelete);
+        user.assignRefreshToken(refreshToken);
+        when(refreshTokenRepository.findByToken(tokenToDelete)).thenReturn(Optional.of(refreshToken));
 
         // When
         refreshTokenService.deleteByToken(tokenToDelete);
 
         // Then
-        verify(refreshTokenRepository, times(1)).deleteByToken(tokenToDelete);
+        assertNull(user.getRefreshToken());
+        verify(refreshTokenRepository, times(1)).findByToken(tokenToDelete);
+        verify(refreshTokenRepository, times(1)).delete(refreshToken);
         verifyNoMoreInteractions(refreshTokenRepository);
     }
 }

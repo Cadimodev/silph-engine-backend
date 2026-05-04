@@ -66,9 +66,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return refreshTokenService.findByToken(requestRefreshToken)
                 .map(refreshTokenService::verifyExpiration)
                 .map(refreshToken -> {
+
                     User user = refreshToken.getUser();
-                    
-                    refreshTokenService.deleteByToken(requestRefreshToken);
                     
                     var newRefreshToken = refreshTokenService.createRefreshToken(user);
                     Map<String, Object> extraClaims = new HashMap<>();

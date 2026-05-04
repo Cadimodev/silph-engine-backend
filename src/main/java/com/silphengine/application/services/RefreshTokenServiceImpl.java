@@ -33,10 +33,12 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Transactional
     public RefreshToken createRefreshToken(User user) {
         RefreshToken token = refreshTokenRepository.findByUser(user)
-                .orElseGet(() -> RefreshToken.builder().user(user).build());
+                .orElseGet(() -> RefreshToken.builder().build());
 
         token.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
         token.setToken(UUID.randomUUID().toString());
+
+        user.assignRefreshToken(token);
 
         return refreshTokenRepository.save(token);
     }
@@ -45,6 +47,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Transactional
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.getExpiryDate().isBefore(Instant.now())) {
+            User user = token.getUser();
+            if (user != null) {
+                user.removeRefreshToken();
+            }
             refreshTokenRepository.delete(token);
             throw new TokenRefreshException(token.getToken(), "Refresh token has expired. Please log in again.");
         }
@@ -54,6 +60,12 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Override
     @Transactional
     public void deleteByToken(String token) {
-        refreshTokenRepository.deleteByToken(token);
+        refreshTokenRepository.findByToken(token).ifPresent(refreshToken -> {
+            User user = refreshToken.getUser();
+            if (user != null) {
+                user.removeRefreshToken();
+            }
+            refreshTokenRepository.delete(refreshToken);
+        });
     }
 }
