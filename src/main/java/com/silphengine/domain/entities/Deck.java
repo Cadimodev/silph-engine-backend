@@ -1,11 +1,11 @@
 package com.silphengine.domain.entities;
 
+import com.silphengine.domain.constants.CardRarities;
+import com.silphengine.domain.enums.CardCategory;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "decks")
@@ -53,5 +53,54 @@ public class Deck {
     public void removeCard(DeckCard deckCard) {
         cards.remove(deckCard);
         deckCard.setDeck(null);
+    }
+
+    public void evaluateLegality(List<String> standardValidMarks) {
+        this.isLegal = hasCorrectDeckSize() 
+                && hasValidAceSpecCount() 
+                && respectsFourCopyRule() 
+                && hasValidRegulationMarks(standardValidMarks);
+    }
+
+    private boolean hasCorrectDeckSize() {
+        int totalCards = this.cards.stream()
+                .mapToInt(DeckCard::getQuantity)
+                .sum();
+        return totalCards == 60;
+    }
+
+    private boolean hasValidAceSpecCount() {
+        int totalAceSpecs = this.cards.stream()
+                .filter(dc -> CardRarities.ACE_SPEC.equals(dc.getCard().getRarity()))
+                .mapToInt(DeckCard::getQuantity)
+                .sum();
+        return totalAceSpecs <= 1;
+    }
+
+    private boolean respectsFourCopyRule() {
+        Map<String, Integer> copiesByName = new HashMap<>();
+        for (DeckCard deckCard : cards) {
+            Card card = deckCard.getCard();
+            if (!card.isBasicEnergy()) {
+                int copies = copiesByName.merge(card.getName(), deckCard.getQuantity(), Integer::sum);
+                if (copies > 4) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean hasValidRegulationMarks(List<String> standardValidMarks) {
+        for (DeckCard deckCard : cards) {
+            Card card = deckCard.getCard();
+            if (!card.isBasicEnergy()) {
+                String regMark = card.getRegulationMark();
+                if (regMark == null || !standardValidMarks.contains(regMark)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

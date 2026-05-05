@@ -31,3 +31,14 @@ application:
         expiration: 3600000 # 1 hour
       refresh-token:
         expiration: 604800000 # 7 days
+
+# ===================================================================
+# FORMAT CONFIGURATION
+# ===================================================================
+pokemon:
+  tcg:
+    format:
+      standard-valid-marks:
+        - H
+        - I
+        - J

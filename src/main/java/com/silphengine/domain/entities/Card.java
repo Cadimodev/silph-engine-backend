@@ -1,5 +1,6 @@
 package com.silphengine.domain.entities;
 
+import com.silphengine.domain.constants.BasicEnergyNames;
 import com.silphengine.domain.enums.CardCategory;
 import com.silphengine.domain.enums.CardType;
 import jakarta.persistence.*;
@@ -64,5 +65,10 @@ public class Card {
         } else {
             this.regulationMark = null;
         }
+    }
+
+    public boolean isBasicEnergy() {
+        return this.cardCategory == CardCategory.ENERGY
+                && BasicEnergyNames.NAMES.contains(this.name);
     }
 }
