@@ -68,9 +68,6 @@ public class UserControllerTest {
         mockAdmin = mock(User.class);
         when(mockAdmin.getId()).thenReturn(mockAdminId);
 
-        // Set the security context for the tests that need an authenticated user
-        //SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(mockUser, null));
-
         // By default
         authenticateAsUser();
     }
