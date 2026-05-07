@@ -47,7 +47,7 @@ public class DeckMapperTest {
                 .nickname("Ash")
                 .build();
 
-        deckRequest = new DeckRequest(owner.getId(), "My Awesome Deck", List.of());
+        deckRequest = new DeckRequest("My Awesome Deck", List.of());
 
         card = Card.builder()
                 .id(UUID.randomUUID())

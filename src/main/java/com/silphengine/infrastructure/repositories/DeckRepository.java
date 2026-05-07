@@ -9,6 +9,8 @@ import java.util.UUID;
 
 public interface DeckRepository extends JpaRepository<Deck, UUID> {
 
+    public Optional<Deck> findByIdAndOwnerId(UUID deckId, UUID ownerId);
+
     public List<Deck> findByOwnerId(UUID ownerId);
 
     public Optional<Deck> findByOwnerIdAndName(UUID ownerId, String name);

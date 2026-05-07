@@ -4,7 +4,6 @@ import com.silphengine.application.config.FormatProperties;
 import com.silphengine.application.mappers.DeckMapper;
 import com.silphengine.domain.dto.requests.DeckCardRequest;
 import com.silphengine.domain.dto.requests.DeckRequest;
-import com.silphengine.domain.dto.responses.CardResponse;
 import com.silphengine.domain.dto.responses.DeckResponse;
 import com.silphengine.domain.entities.*;
 import com.silphengine.domain.enums.CardCategory;
@@ -84,7 +83,7 @@ public class DeckServiceImplTest {
                 .quantity(4)
                 .build();
 
-        deckRequest = new DeckRequest(owner.getId(), "Test Deck", List.of(new DeckCardRequest(card.getId(), 4)));
+        deckRequest = new DeckRequest("Test Deck", List.of(new DeckCardRequest(card.getId(), 4)));
 
         deck = Deck.builder()
                 .id(UUID.randomUUID())
@@ -119,7 +118,7 @@ public class DeckServiceImplTest {
         when(deckRepository.save(any(Deck.class))).thenReturn(deck);
 
         // When
-        DeckResponse result = deckService.createDeck(deckRequest);
+        DeckResponse result = deckService.createDeck(deckRequest, owner.getId());
 
         // Then
         assertNotNull(result);
@@ -143,10 +142,10 @@ public class DeckServiceImplTest {
 
         // When & Then
         DuplicateResourceException exception = assertThrows(DuplicateResourceException.class,
-                () -> deckService.createDeck(deckRequest));
+                () -> deckService.createDeck(deckRequest, owner.getId()));
         assertEquals("Deck already exists with that name for this user", exception.getMessage());
 
-        verify(deckRepository, times(1)).findByOwnerIdAndName(deckRequest.userId(), deckRequest.name());
+        verify(deckRepository, times(1)).findByOwnerIdAndName(owner.getId(), deckRequest.name());
     }
 
     @Test
@@ -158,11 +157,11 @@ public class DeckServiceImplTest {
 
         // When & Then
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> deckService.createDeck(deckRequest));
-        assertEquals("User with ID: " + deckRequest.userId() + " not found", exception.getMessage());
+                () -> deckService.createDeck(deckRequest, owner.getId()));
+        assertEquals("User with ID: " + owner.getId() + " not found", exception.getMessage());
 
-        verify(deckRepository, times(1)).findByOwnerIdAndName(deckRequest.userId(), deckRequest.name());
-        verify(userRepository, times(1)).findById(deckRequest.userId());
+        verify(deckRepository, times(1)).findByOwnerIdAndName(owner.getId(), deckRequest.name());
+        verify(userRepository, times(1)).findById(owner.getId());
     }
 
     @Test
@@ -175,12 +174,43 @@ public class DeckServiceImplTest {
 
         // When & Then
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> deckService.createDeck(deckRequest));
+                () -> deckService.createDeck(deckRequest, owner.getId()));
         assertEquals("Card with ID: " + card.getId() + " not found", exception.getMessage());
 
-        verify(deckRepository, times(1)).findByOwnerIdAndName(deckRequest.userId(), deckRequest.name());
-        verify(userRepository, times(1)).findById(deckRequest.userId());
+        verify(deckRepository, times(1)).findByOwnerIdAndName(owner.getId(), deckRequest.name());
+        verify(userRepository, times(1)).findById(owner.getId());
         verify(cardRepository, times(1)).findById(card.getId());
+    }
+
+    @Test
+    void getByIdAndOwnerID_shouldReturnDeckResponse_whenDeckExists() {
+
+        // Given
+        when(deckRepository.findByIdAndOwnerId(any(UUID.class), any(UUID.class))).thenReturn(Optional.of(deck));
+        when(deckMapper.toResponse(eq(deck))).thenReturn(deckResponse);
+
+        // When
+        DeckResponse result = deckService.getByIdAndOwnerID(deck.getId(), owner.getId());
+
+        // Then
+        assertNotNull(result);
+        assertEquals(deckResponse.name(), result.name());
+        assertEquals(deckResponse.id(), result.id());
+        verify(deckRepository, times(1)).findByIdAndOwnerId(deck.getId(), owner.getId());
+    }
+
+    @Test
+    void getByIdAndOwnerID_shouldThrowResourceNotFound_whenDeckDoesNotExists() {
+
+        // Given
+        when(deckRepository.findByIdAndOwnerId(any(UUID.class), any(UUID.class))).thenReturn(Optional.empty());
+
+        // When & Then
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> deckService.getByIdAndOwnerID(deck.getId(), owner.getId()));
+        assertEquals("Deck with ID: " + deck.getId() + " not found" , exception.getMessage());
+
+        verify(deckRepository, times(1)).findByIdAndOwnerId(deck.getId(), owner.getId());
     }
 
     @Test
@@ -209,36 +239,23 @@ public class DeckServiceImplTest {
 
 
         // When
-        DeckResponse result = deckService.getByOwnerIdAndDeckName(owner.getId(), deckRequest.name());
+        List<DeckResponse> result = deckService.getByOwnerIdAndDeckName(owner.getId(), deckRequest.name());
 
         // Then
         assertNotNull(result);
-        assertEquals(deckResponse.name(), result.name());
-        assertEquals(deckResponse.id(), result.id());
+        assertFalse(result.isEmpty());
+        assertEquals(deckResponse.name(), result.getFirst().name());
+        assertEquals(deckResponse.id(), result.getFirst().id());
         verify(deckRepository, times(1)).findByOwnerIdAndName(owner.getId(), deckRequest.name());
     }
 
     @Test
-    void getByOwnerIdAndDeckName_shouldThrowResourceNotFound_whenDeckDoesNotExists() {
+    void updateDeck_shouldReturnDeckResponse_whenDeckExists() {
 
         // Given
-        when(deckRepository.findByOwnerIdAndName(any(UUID.class), eq(deckRequest.name()))).thenReturn(Optional.empty());
+        DeckRequest updateRequest = new DeckRequest("Update Test Deck", List.of(new DeckCardRequest(card.getId(), 4)));
 
-        // When & Then
-        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> deckService.getByOwnerIdAndDeckName(owner.getId(), deckRequest.name()));
-        assertEquals("Deck not found. Name: " + deckRequest.name() + " - UserID: " + owner.getId() , exception.getMessage());
-
-        verify(deckRepository, times(1)).findByOwnerIdAndName(deckRequest.userId(), deckRequest.name());
-    }
-
-    @Test
-    void updateByExternalId_shouldReturnDeckResponse_whenDeckExists() {
-
-        // Given
-        DeckRequest updateRequest = new DeckRequest(owner.getId(), "Update Test Deck", List.of(new DeckCardRequest(card.getId(), 4)));
-
-        when(deckRepository.findById(deck.getId())).thenReturn(Optional.of(deck));
+        when(deckRepository.findByIdAndOwnerId(deck.getId(), owner.getId())).thenReturn(Optional.of(deck));
         when(deckRepository.findByOwnerIdAndName(owner.getId(), updateRequest.name())).thenReturn(Optional.empty());
         when(cardRepository.findById(any(UUID.class))).thenReturn(Optional.of(card));
         when(formatProperties.getStandardValidMarks()).thenReturn(List.of("G", "H", "I"));
@@ -253,72 +270,72 @@ public class DeckServiceImplTest {
         );
 
         // When
-        DeckResponse result = deckService.updateDeck(deck.getId(), updateRequest);
+        DeckResponse result = deckService.updateDeck(deck.getId(), updateRequest, owner.getId());
 
         // Then
         assertNotNull(result);
         assertEquals(updateRequest.name(), result.name());
 
-        verify(deckRepository, times(1)).findById(deck.getId());
-        verify(deckRepository, times(1)).findByOwnerIdAndName(updateRequest.userId(), updateRequest.name());
+        verify(deckRepository, times(1)).findByIdAndOwnerId(deck.getId(), owner.getId());
+        verify(deckRepository, times(1)).findByOwnerIdAndName(owner.getId(), updateRequest.name());
         verify(deckRepository, times(1)).save(deck);
     }
 
     @Test
-    void updateByExternalId_shouldThrowResourceNotFound_whenDeckDoesNotExists() {
+    void updateDeck_shouldThrowResourceNotFound_whenDeckDoesNotExists() {
 
         // Given
-        DeckRequest updateRequest = new DeckRequest(owner.getId(), "Update Test Deck", List.of(new DeckCardRequest(card.getId(), 4)));
+        DeckRequest updateRequest = new DeckRequest("Update Test Deck", List.of(new DeckCardRequest(card.getId(), 4)));
 
-        when(deckRepository.findById(deck.getId())).thenReturn(Optional.empty());
+        when(deckRepository.findByIdAndOwnerId(deck.getId(), owner.getId())).thenReturn(Optional.empty());
 
         // When & Then
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> deckService.updateDeck(deck.getId(), updateRequest));
+                () -> deckService.updateDeck(deck.getId(), updateRequest, owner.getId()));
 
         assertEquals("Deck with ID: " + deck.getId() + " not found", exception.getMessage());
 
-        verify(deckRepository, times(1)).findById(deck.getId());
+        verify(deckRepository, times(1)).findByIdAndOwnerId(deck.getId(), owner.getId());
     }
 
     @Test
-    void updateByExternalId_shouldThrowDuplicateResource_whenDeckAlreadyExistsWithNewName() {
+    void updateDeck_shouldThrowDuplicateResource_whenDeckAlreadyExistsWithNewName() {
 
         // Given
-        DeckRequest updateRequest = new DeckRequest(owner.getId(), "Existing Deck Name", List.of(new DeckCardRequest(card.getId(), 4)));
+        DeckRequest updateRequest = new DeckRequest("Existing Deck Name", List.of(new DeckCardRequest(card.getId(), 4)));
 
-        when(deckRepository.findById(deck.getId())).thenReturn(Optional.of(deck));
-        when(deckRepository.findByOwnerIdAndName(deckRequest.userId(), updateRequest.name())).thenReturn(Optional.of(deck));
+        when(deckRepository.findByIdAndOwnerId(deck.getId(), owner.getId())).thenReturn(Optional.of(deck));
+        when(deckRepository.findByOwnerIdAndName(owner.getId(), updateRequest.name())).thenReturn(Optional.of(deck));
 
         // When & Then
         DuplicateResourceException exception = assertThrows(DuplicateResourceException.class,
-                () -> deckService.updateDeck(deck.getId(), updateRequest));
+                () -> deckService.updateDeck(deck.getId(), updateRequest, owner.getId()));
 
         assertEquals("Deck already exists with the name: " + updateRequest.name(), exception.getMessage());
 
-        verify(deckRepository, times(1)).findById(deck.getId());
-        verify(deckRepository, times(1)).findByOwnerIdAndName(deckRequest.userId(), updateRequest.name());
+        verify(deckRepository, times(1)).findByIdAndOwnerId(deck.getId(), owner.getId());
+        verify(deckRepository, times(1)).findByOwnerIdAndName(owner.getId(), updateRequest.name());
     }
 
 
     @Test
-    void updateByExternalId_shouldThrowResourceNotFound_whenCardDoesNotExists() {
+    void updateDeck_shouldThrowResourceNotFound_whenCardDoesNotExists() {
 
         // Given
-        DeckRequest updateRequest = new DeckRequest(owner.getId(), "Existing Deck Name", List.of(new DeckCardRequest(card.getId(), 4)));
+        DeckRequest updateRequest = new DeckRequest("Existing Deck Name", List.of(new DeckCardRequest(card.getId(), 4)));
 
-        when(deckRepository.findById(deck.getId())).thenReturn(Optional.of(deck));
-        when(deckRepository.findByOwnerIdAndName(deckRequest.userId(), updateRequest.name())).thenReturn(Optional.empty());
+        when(deckRepository.findByIdAndOwnerId(deck.getId(), owner.getId())).thenReturn(Optional.of(deck));
+        when(deckRepository.findByOwnerIdAndName(owner.getId(), updateRequest.name())).thenReturn(Optional.empty());
         when(cardRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
         // When & Then
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> deckService.updateDeck(deck.getId(), updateRequest));
+                () -> deckService.updateDeck(deck.getId(), updateRequest, owner.getId()));
 
         assertEquals("Card with ID: " + card.getId() + " not found", exception.getMessage());
 
-        verify(deckRepository, times(1)).findById(deck.getId());
-        verify(deckRepository, times(1)).findByOwnerIdAndName(deckRequest.userId(), updateRequest.name());
+        verify(deckRepository, times(1)).findByIdAndOwnerId(deck.getId(), owner.getId());
+        verify(deckRepository, times(1)).findByOwnerIdAndName(owner.getId(), updateRequest.name());
         verify(cardRepository, times(1)).findById(card.getId());
     }
 
@@ -326,14 +343,14 @@ public class DeckServiceImplTest {
     void deleteDeck_shouldDeleteDeck_whenDeckExists() {
 
         // Given
-        when(deckRepository.findById(any(UUID.class))).thenReturn(Optional.of(deck));
+        when(deckRepository.findByIdAndOwnerId(any(UUID.class), any(UUID.class))).thenReturn(Optional.of(deck));
         doNothing().when(deckRepository).delete(deck);
 
         // When
-        deckService.deleteDeck(deck.getId());
+        deckService.deleteDeck(deck.getId(), owner.getId());
 
         // Then
-        verify(deckRepository, times(1)).findById(deck.getId());
+        verify(deckRepository, times(1)).findByIdAndOwnerId(deck.getId(), owner.getId());
         verify(deckRepository, times(1)).delete(deck);
     }
 
@@ -341,14 +358,14 @@ public class DeckServiceImplTest {
     void deleteDeck_shouldThrowResourceNotFoundException_whenDeckDoesNotExists() {
 
         // Given
-        when(deckRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
+        when(deckRepository.findByIdAndOwnerId(any(UUID.class), any(UUID.class))).thenReturn(Optional.empty());
 
         // When & Then
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> deckService.deleteDeck(deck.getId()));
+                () -> deckService.deleteDeck(deck.getId(), owner.getId()));
         assertEquals("Deck with ID: " + deck.getId() + " not found", exception.getMessage());
 
-        verify(deckRepository, times(1)).findById(deck.getId());
+        verify(deckRepository, times(1)).findByIdAndOwnerId(deck.getId(), owner.getId());
         verifyNoMoreInteractions(deckRepository);
     }
 

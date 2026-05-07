@@ -40,14 +40,14 @@ public class DeckServiceImpl implements DeckService {
 
     @Override
     @Transactional
-    public DeckResponse createDeck(DeckRequest deckRequest) {
+    public DeckResponse createDeck(DeckRequest deckRequest, UUID ownerId) {
 
-        deckRepository.findByOwnerIdAndName(deckRequest.userId(), deckRequest.name()).ifPresent(
+        deckRepository.findByOwnerIdAndName(ownerId, deckRequest.name()).ifPresent(
                 d -> { throw new DuplicateResourceException("Deck already exists with that name for this user"); }
         );
         
-        User user = userRepository.findById(deckRequest.userId()).orElseThrow(
-                () -> new ResourceNotFoundException("User with ID: " + deckRequest.userId() + " not found")
+        User user = userRepository.findById(ownerId).orElseThrow(
+                () -> new ResourceNotFoundException("User with ID: " + ownerId + " not found")
         );
 
         List<DeckCard> deckCards = getDeckCardFromRequest(deckRequest.cards());
@@ -57,6 +57,16 @@ public class DeckServiceImpl implements DeckService {
         newDeck.evaluateLegality(formatProperties.getStandardValidMarks());
         
         return deckMapper.toResponse(deckRepository.save(newDeck));
+    }
+
+    @Override
+    public DeckResponse getByIdAndOwnerID(UUID deckId, UUID ownerId) {
+
+        Deck deck = deckRepository.findByIdAndOwnerId(deckId, ownerId).orElseThrow(
+                () -> new ResourceNotFoundException("Deck with ID: " + deckId + " not found")
+        );
+
+        return deckMapper.toResponse(deck);
     }
 
     @Override
@@ -70,25 +80,24 @@ public class DeckServiceImpl implements DeckService {
     }
 
     @Override
-    public DeckResponse getByOwnerIdAndDeckName(UUID ownerId, String deckName) {
+    public List<DeckResponse> getByOwnerIdAndDeckName(UUID ownerId, String deckName) {
 
-        Deck deck = deckRepository.findByOwnerIdAndName(ownerId, deckName).orElseThrow(
-                () -> new ResourceNotFoundException("Deck not found. Name: " + deckName + " - UserID: " + ownerId ));
-
-        return deckMapper.toResponse(deck);
-
+        return deckRepository.findByOwnerIdAndName(ownerId, deckName)
+                .map(deckMapper::toResponse)
+                .map(List::of)
+                .orElseGet(List::of);
     }
 
     @Override
     @Transactional
-    public DeckResponse updateDeck(UUID deckId, DeckRequest deckRequest) {
+    public DeckResponse updateDeck(UUID deckId, DeckRequest deckRequest, UUID ownerId) {
 
-        Deck deck = deckRepository.findById(deckId).orElseThrow(
+        Deck deck = deckRepository.findByIdAndOwnerId(deckId, ownerId).orElseThrow(
                 () -> new ResourceNotFoundException("Deck with ID: " + deckId + " not found")
         );
 
         if (!deck.getName().equalsIgnoreCase(deckRequest.name())) {
-            deckRepository.findByOwnerIdAndName(deckRequest.userId(), deckRequest.name()).ifPresent(
+            deckRepository.findByOwnerIdAndName(ownerId, deckRequest.name()).ifPresent(
                     d -> { throw new DuplicateResourceException("Deck already exists with the name: " + deckRequest.name()); }
             );
         }
@@ -104,9 +113,9 @@ public class DeckServiceImpl implements DeckService {
 
     @Override
     @Transactional
-    public void deleteDeck(UUID deckId) {
+    public void deleteDeck(UUID deckId, UUID ownerId) {
 
-        Deck deck = deckRepository.findById(deckId).orElseThrow(
+        Deck deck = deckRepository.findByIdAndOwnerId(deckId, ownerId).orElseThrow(
                 () -> new ResourceNotFoundException("Deck with ID: " + deckId + " not found")
         );
 

@@ -8,13 +8,15 @@ import java.util.UUID;
 
 public interface DeckService {
 
-    DeckResponse createDeck(DeckRequest deckRequest);
+    DeckResponse createDeck(DeckRequest deckRequest, UUID ownerId);
+
+    DeckResponse getByIdAndOwnerID(UUID deckId, UUID ownerId);
 
     List<DeckResponse> getByOwnerId(UUID ownerId);
 
-    DeckResponse getByOwnerIdAndDeckName(UUID ownerId, String deckName);
+    List<DeckResponse> getByOwnerIdAndDeckName(UUID ownerId, String deckName);
 
-    DeckResponse updateDeck(UUID deckId, DeckRequest deckRequest);
+    DeckResponse updateDeck(UUID deckId, DeckRequest deckRequest, UUID ownerId);
 
-    void deleteDeck(UUID deckId);
+    void deleteDeck(UUID deckId, UUID ownerID);
 }

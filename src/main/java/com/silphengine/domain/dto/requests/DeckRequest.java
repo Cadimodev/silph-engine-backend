@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.UUID;
 
 public record DeckRequest(
-        @NotNull(message = "User id is mandatory")
-        UUID userId,
-
         @NotBlank(message = "Name is mandatory")
         String name,
 
