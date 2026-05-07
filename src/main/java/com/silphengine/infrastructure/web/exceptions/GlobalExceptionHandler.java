@@ -6,12 +6,14 @@ import com.silphengine.domain.exceptions.ResourceNotFoundException;
 import com.silphengine.domain.exceptions.TokenRefreshException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,6 +21,19 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler({AuthorizationDeniedException.class, AccessDeniedException.class})
+    public ResponseEntity<Map<String, Object>> handleAccessDeniedException(Exception ex) {
+
+        Map<String, Object> errorResponse = Map.of(
+                "timestamp", LocalDateTime.now(),
+                "status", HttpStatus.FORBIDDEN.value(),
+                "error", "Forbidden",
+                "message", "You do not have permission to access this resource."
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Object> handleResourceNotFound(ResourceNotFoundException ex) {

@@ -9,23 +9,21 @@ import com.silphengine.domain.exceptions.BadRequestException;
 import com.silphengine.domain.exceptions.DuplicateResourceException;
 import com.silphengine.domain.exceptions.ResourceNotFoundException;
 import com.silphengine.domain.services.UserService;
+import com.silphengine.infrastructure.web.config.TestSecurityConfig;
 import com.silphengine.security.JwtService;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import com.silphengine.security.annotations.WithMockCustomUser;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -37,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @WebMvcTest(UserController.class)
+@Import(TestSecurityConfig.class)
 public class UserControllerTest {
 
     @Autowired
@@ -51,54 +50,12 @@ public class UserControllerTest {
     @MockitoBean
     private JwtService jwtService;
 
-    private User mockUser;
-    private UUID mockUserId;
-
-    private User mockAdmin;
-    private UUID mockAdminId;
-
-    @BeforeEach
-    void setUp() {
-
-        mockUserId = UUID.randomUUID();
-        mockUser = mock(User.class);
-        when(mockUser.getId()).thenReturn(mockUserId);
-
-        mockAdminId = UUID.randomUUID();
-        mockAdmin = mock(User.class);
-        when(mockAdmin.getId()).thenReturn(mockAdminId);
-
-        // By default
-        authenticateAsUser();
-    }
-
-    @AfterEach
-    void tearDown() {
-
-        // Clear the context after each test
-        SecurityContextHolder.clearContext();
-    }
-
-    private void authenticateAsUser() {
-        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                mockUser, null, List.of(new SimpleGrantedAuthority("ROLE_USER"))
-        );
-        SecurityContextHolder.getContext().setAuthentication(auth);
-    }
-
-    private void authenticateAsAdmin() {
-        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                mockAdmin, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
-        );
-        SecurityContextHolder.getContext().setAuthentication(auth);
-    }
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void createUser_shouldReturnCreatedAndUserResponse_whenAdminCreatesUser() throws Exception {
 
         // Given
-        authenticateAsAdmin();
-
         String nickname = "testuser";
         String email = "user@test.com";
         String password = "Password1234!";
@@ -123,11 +80,28 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser
+    void createUser_shouldReturnForbidden_whenHavingUserRole() throws Exception {
+
+        // Given
+
+        UserRequest request = new UserRequest("user", "user@test.com", "Password1234!");
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/users")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+
+        verify(userService, never()).createUser(any());
+    }
+
+    @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void createUser_shouldReturnConflict_whenNicknameAlreadyExists() throws Exception {
 
         // Given
-        authenticateAsAdmin();
-
         String nickname = "existingNickname";
         String email = "user@test.com";
         String password = "Password1234!";
@@ -145,11 +119,10 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void createUser_shouldReturnConflict_whenEmailAlreadyExists() throws Exception {
 
         // Given
-        authenticateAsAdmin();
-
         String nickname = "testuser";
         String email = "existingEmail@test.com";
         String password = "Password1234!";
@@ -167,11 +140,10 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void getUserById_shouldReturnOkAndUserResponse_whenAdminRequestsAnyUser() throws Exception {
 
         // Given
-        authenticateAsAdmin();
-
         String nickname = "testuser";
         UUID id = UUID.randomUUID();
 
@@ -190,11 +162,10 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void getUserById_shouldReturnNotFound_whenUserDoesNotExists() throws Exception {
 
         // Given
-        authenticateAsAdmin();
-
         UUID id = UUID.randomUUID();
 
         when(userService.getUserById(eq(id))).thenThrow(new ResourceNotFoundException("User not found"));
@@ -206,9 +177,11 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser
     void getMyProfile_shouldReturnOkAndUserResponse() throws Exception {
 
         // Given
+        UUID mockUserId = getAuthenticatedUserId();
         UserResponse response = new UserResponse(mockUserId, "testuser", "user@test.com", LocalDateTime.now());
         when(userService.getUserById(eq(mockUserId))).thenReturn(response);
 
@@ -219,6 +192,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser
     void getUserByNickname_shouldReturnOkAndUserResponse_whenUserExists() throws Exception {
 
         // Given
@@ -242,6 +216,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser
     void getUserByNickname_shouldReturnNotFound_whenUserDoesNotExists() throws Exception {
 
         // Given
@@ -256,11 +231,10 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void updateUserProfile_shouldReturnOkAndUserResponse_whenAdminUpdatesAnyUser() throws Exception {
 
         // Given
-        authenticateAsAdmin();
-
         UUID targetUserId = UUID.randomUUID();
         String nickname = "testuser";
         String email = "user@test.com";
@@ -283,11 +257,10 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void updateUserProfile_shouldReturnNotFound_whenUserDoesNotExists() throws Exception {
 
         // Given
-        authenticateAsAdmin();
-
         UUID targetUserId = UUID.randomUUID();
         String nickname = "testuser";
         String email = "user@test.com";
@@ -305,11 +278,10 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void updateUserProfile_shouldReturnConflict_whenNicknameAlreadyExists() throws Exception {
 
         // Given
-        authenticateAsAdmin();
-
         UUID targetUserId = UUID.randomUUID();
         String nickname = "existingNickname";
         String email = "user@test.com";
@@ -327,11 +299,10 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void updateUserProfile_shouldReturnConflict_whenEmailAlreadyExists() throws Exception {
 
         // Given
-        authenticateAsAdmin();
-
         UUID targetUserId = UUID.randomUUID();
         String nickname = "testuser";
         String email = "existingEmail@test.com";
@@ -349,9 +320,11 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser
     void updateMyProfile_shouldReturnOkAndUserResponse_whenUpdatedCorrectly() throws Exception {
 
         // Given
+        UUID mockUserId = getAuthenticatedUserId();
         String nickname = "testuser";
         String email = "user@test.com";
 
@@ -373,9 +346,11 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser
     void updateMyProfile_shouldReturnConflict_whenNicknameAlreadyExists() throws Exception {
 
         // Given
+        UUID mockUserId = getAuthenticatedUserId();
         String nickname = "existingNickname";
         String email = "user@test.com";
 
@@ -392,9 +367,11 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser
     void updateMyProfile_shouldReturnConflict_whenEmailAlreadyExists() throws Exception {
 
         // Given
+        UUID mockUserId = getAuthenticatedUserId();
         String nickname = "testuser";
         String email = "existingEmail@test.com";
 
@@ -411,18 +388,17 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void changeUserPassword_shouldReturnNoContent_whenAdminUpdatesUserPassword() throws Exception {
 
         // Given
-        authenticateAsAdmin();
-
         UUID targetUserId = UUID.randomUUID();
         String oldPassword = "Password1234!";
         String newPassword = "Password5678!";
 
         PasswordChangeRequest request = new PasswordChangeRequest(oldPassword, newPassword);
 
-        doNothing().when(userService).changeUserPassword(eq(mockUserId), any(PasswordChangeRequest.class));
+        doNothing().when(userService).changeUserPassword(eq(targetUserId), any(PasswordChangeRequest.class));
 
         // When & Then
         mockMvc.perform(patch("/api/v1/users/{id}/password", targetUserId)
@@ -433,11 +409,10 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void changeUserPassword_shouldReturnBadRequest_whenRequestIsInvalid() throws Exception {
 
         // Given
-        authenticateAsAdmin();
-
         UUID targetUserId = UUID.randomUUID();
         String oldPassword = "Password1234!";
         String newPassword = "invalidPassword";
@@ -453,11 +428,10 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void changeUserPassword_shouldReturnBadRequest_whenOldPasswordIsIncorrect() throws Exception {
 
         // Given
-        authenticateAsAdmin();
-
         UUID targetUserId = UUID.randomUUID();
         String oldPassword = "WrongPass1234!";
         String newPassword = "Password5678!";
@@ -475,11 +449,10 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void changeUserPassword_shouldReturnNotFound_whenUserDoesNotExists() throws Exception {
 
         // Given
-        authenticateAsAdmin();
-
         UUID targetUserId = UUID.randomUUID();
         String oldPassword = "Password1234!";
         String newPassword = "Password5678!";
@@ -497,9 +470,11 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser
     void changeMyPassword_shouldReturnNoContent_whenPasswordUpdatedCorrectly() throws Exception {
 
         // Given
+        UUID mockUserId = getAuthenticatedUserId();
         String oldPassword = "Password1234!";
         String newPassword = "Password5678!";
 
@@ -516,6 +491,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser
     void changeMyPassword_shouldReturnBadRequest_whenRequestIsInvalid() throws Exception {
 
         // Given
@@ -533,9 +509,11 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser
     void changeMyPassword_shouldReturnBadRequest_whenOldPasswordIsIncorrect() throws Exception {
 
         // Given
+        UUID mockUserId = getAuthenticatedUserId();
         String oldPassword = "WrongPass1234!";
         String newPassword = "Password5678!";
 
@@ -553,10 +531,10 @@ public class UserControllerTest {
 
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void deleteUser_shouldReturnNoContent_whenAdminDeletesAnyUser() throws Exception {
 
         // Given
-        authenticateAsAdmin();
         UUID targetUserId = UUID.randomUUID();
 
         doNothing().when(userService).deleteUser(eq(targetUserId));
@@ -568,10 +546,10 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser(roles = {"ADMIN"})
     void deleteUser_shouldReturnNotFound_whenUserDoesNotExists() throws Exception {
 
         // Given
-        authenticateAsAdmin();
         UUID targetUserId = UUID.randomUUID();
         doThrow(new ResourceNotFoundException("User not found")).when(userService).deleteUser(eq(targetUserId));
 
@@ -583,9 +561,12 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockCustomUser
     void deleteMyAccount_shouldReturnNoContent_whenDeletedCorrectly() throws Exception {
 
         // Given
+        UUID mockUserId = getAuthenticatedUserId();
+
         doNothing().when(userService).deleteUser(eq(mockUserId));
 
         // When & Then
@@ -593,6 +574,12 @@ public class UserControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
+    }
+
+    private UUID getAuthenticatedUserId() {
+        User user = (User) Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
+        Objects.requireNonNull(user);
+        return user.getId();
     }
 
 }
