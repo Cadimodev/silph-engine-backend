@@ -14,6 +14,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -164,6 +165,104 @@ public class InventoryCardRepositoryTest extends AbstractRepositoryIntegrationTe
 
         // Then
         assertThat(foundInventoryCards).isEmpty();
+    }
+
+    @Test
+    void findByIdAndOwnerId_shouldReturnInventoryCard_whenUserAndInventoryCardExist() {
+
+        // Given
+        User user = createDefaultUser("testuser", "test@user.com");
+        userRepository.save(user);
+
+        Expansion expansion = createDefaultExpansion("sv02");
+        expansionRepository.save(expansion);
+
+        Card card = createDefaultCard("sv02-203", "Magikarp", expansion);
+        cardRepository.save(card);
+
+        InventoryCard inventoryCard = InventoryCard.builder()
+                .owner(user)
+                .card(card)
+                .quantity(1)
+                .cardCondition(CardCondition.NEAR_MINT)
+                .cardFinish(CardFinish.NORMAL)
+                .build();
+
+        user.addInventoryCard(inventoryCard);
+        inventoryCard = inventoryCardRepository.saveAndFlush(inventoryCard);
+
+        // When
+        Optional<InventoryCard> foundInventoryCard = inventoryCardRepository.findByIdAndOwnerId(inventoryCard.getId(), inventoryCard.getOwner().getId());
+
+        // Then
+        assertThat(foundInventoryCard).isPresent();
+        assertThat(foundInventoryCard.get().getId()).isEqualTo(inventoryCard.getId());
+    }
+
+    @Test
+    void findByIdAndOwnerId_shouldReturnEmpty_whenCardDoesNotExist() {
+
+        // Given
+        User user = createDefaultUser("testuser", "test@user.com");
+        userRepository.save(user);
+
+        UUID nonExistingId = UUID.randomUUID();
+
+        // When
+        Optional<InventoryCard> foundInventoryCard = inventoryCardRepository.findByIdAndOwnerId(nonExistingId, user.getId());
+
+        // Then
+        assertThat(foundInventoryCard).isEmpty();
+    }
+
+    @Test
+    void findByOwnerIdAndCardIdAndCardConditionAndCardFinish_shouldReturnInventoryCard_whenCardExist() {
+
+        // Given
+        User user = createDefaultUser("testuser", "test@user.com");
+        userRepository.save(user);
+
+        Expansion expansion = createDefaultExpansion("sv02");
+        expansionRepository.save(expansion);
+
+        Card card = createDefaultCard("sv02-203", "Magikarp", expansion);
+        cardRepository.save(card);
+
+        InventoryCard inventoryCard = InventoryCard.builder()
+                .owner(user)
+                .card(card)
+                .quantity(1)
+                .cardCondition(CardCondition.NEAR_MINT)
+                .cardFinish(CardFinish.NORMAL)
+                .build();
+
+        user.addInventoryCard(inventoryCard);
+        inventoryCard = inventoryCardRepository.saveAndFlush(inventoryCard);
+
+        // When
+        Optional<InventoryCard> foundInventoryCard = inventoryCardRepository.findByOwnerIdAndCardIdAndCardConditionAndCardFinish(
+                inventoryCard.getOwner().getId(), inventoryCard.getCard().getId(), inventoryCard.getCardCondition(), inventoryCard.getCardFinish());
+
+        // Then
+        assertThat(foundInventoryCard).isPresent();
+        assertThat(foundInventoryCard.get().getId()).isEqualTo(inventoryCard.getId());
+    }
+
+    @Test
+    void findByOwnerIdAndCardIdAndCardConditionAndCardFinish_shouldReturnEmpty_whenCardDoesNotExist() {
+
+        // Given
+        User user = createDefaultUser("testuser", "test@user.com");
+        userRepository.save(user);
+
+        UUID nonExistingId = UUID.randomUUID();
+
+        // When
+        Optional<InventoryCard> foundInventoryCard = inventoryCardRepository.findByOwnerIdAndCardIdAndCardConditionAndCardFinish(
+                user.getId(), nonExistingId, CardCondition.NEAR_MINT, CardFinish.HOLO);
+
+        // Then
+        assertThat(foundInventoryCard).isEmpty();
     }
 
     @Test
