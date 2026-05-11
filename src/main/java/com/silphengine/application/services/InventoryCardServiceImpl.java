@@ -93,7 +93,7 @@ public class InventoryCardServiceImpl implements InventoryCardService {
     public InventoryCardResponse updateInventoryCard(UUID inventoryCardId, UpdateInventoryCardRequest request, UUID ownerID) {
 
         InventoryCard inventoryCard  = inventoryCardRepository.findById(inventoryCardId).orElseThrow(
-                () -> new ResourceNotFoundException("Inventory card with ID: " + inventoryCardId + " not found"));
+                () -> new ResourceNotFoundException("Inventory Card with ID: " + inventoryCardId + " not found"));
 
         if (!inventoryCard.getOwner().getId().equals(ownerID)) {
             throw new AuthorizationDeniedException("You do not have permission to access this resource.");
@@ -109,7 +109,7 @@ public class InventoryCardServiceImpl implements InventoryCardService {
     public void deleteInventoryCard(UUID inventoryCardId, UUID ownerID) {
 
         InventoryCard inventoryCard  = inventoryCardRepository.findById(inventoryCardId).orElseThrow(
-                () -> new ResourceNotFoundException("Inventory card with ID: " + inventoryCardId + " not found"));
+                () -> new ResourceNotFoundException("Inventory Card with ID: " + inventoryCardId + " not found"));
 
         if (!inventoryCard.getOwner().getId().equals(ownerID)) {
             throw new AuthorizationDeniedException("You do not have permission to access this resource.");
