@@ -21,6 +21,7 @@ public class DataLoader implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception  {
 
+        /*
         System.out.println("**** Silph Engine: Loading test data ****");
 
         try {
@@ -71,5 +72,7 @@ public class DataLoader implements CommandLineRunner {
         }
 
         System.out.println("**** Silph Engine: End test data load ****");
+
+         */
     }
 }

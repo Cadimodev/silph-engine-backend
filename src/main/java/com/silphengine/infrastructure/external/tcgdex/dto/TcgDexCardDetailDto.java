@@ -15,14 +15,14 @@ public record TcgDexCardDetailDto(
         VariantsDto variants,
         @JsonProperty("variants_detailed") List<VariantDetailDto> variantsDetailed,
         List<Integer> dexId,
-        int hp,
+        Integer hp,
         List<String> types,
         String evolveFrom,
         String description,
         String stage,
         List<AttackDto> attacks,
         List<WeaknessDto> weaknesses,
-        int retreat,
+        Integer retreat,
         String regulationMark,
         LegalDto legal,
         String updated,
@@ -37,16 +37,16 @@ public record TcgDexCardDetailDto(
     ) {}
 
     public record CardCountShortDto(
-            int official,
-            int total
+            Integer official,
+            Integer total
     ) {}
 
     public record VariantsDto(
-            boolean firstEdition,
-            boolean holo,
-            boolean normal,
-            boolean reverse,
-            boolean wPromo
+            Boolean firstEdition,
+            Boolean holo,
+            Boolean normal,
+            Boolean reverse,
+            Boolean wPromo
     ) {}
 
     public record VariantDetailDto(
@@ -68,8 +68,8 @@ public record TcgDexCardDetailDto(
     ) {}
 
     public record LegalDto(
-            boolean standard,
-            boolean expanded
+            Boolean standard,
+            Boolean expanded
     ) {}
 
     public record PricingDto(
@@ -80,12 +80,12 @@ public record TcgDexCardDetailDto(
     public record CardMarketDto(
             String updated,
             String unit,
-            int idProduct,
-            double avg,
-            double low,
-            double trend,
-            @JsonProperty("avg-holo") double avgHolo,
-            @JsonProperty("low-holo") double lowHolo,
-            @JsonProperty("trend-holo") double trendHolo
+            Integer idProduct,
+            Double avg,
+            Double low,
+            Double trend,
+            @JsonProperty("avg-holo") Double avgHolo,
+            @JsonProperty("low-holo") Double lowHolo,
+            @JsonProperty("trend-holo") Double trendHolo
     ) {}
 }
