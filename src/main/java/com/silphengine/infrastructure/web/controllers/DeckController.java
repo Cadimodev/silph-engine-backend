@@ -6,6 +6,8 @@ import com.silphengine.domain.entities.User;
 import com.silphengine.domain.services.DeckService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,19 +46,20 @@ public class DeckController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/me")
-    public ResponseEntity<List<DeckResponse>> getMyDecks(
+    public ResponseEntity<Page<DeckResponse>> getMyDecks(
             @AuthenticationPrincipal User user,
-            @RequestParam(required = false) String name) {
+            @RequestParam(required = false) String name,
+            Pageable pageable) {
 
         UUID ownerId = user.getId();
 
         if (name != null && !name.isBlank()) {
 
-            return ResponseEntity.ok(deckService.getByOwnerIdAndDeckName(ownerId, name));
+            return ResponseEntity.ok(deckService.getByOwnerIdAndDeckName(ownerId, name, pageable));
         }
 
         // If name is empty, we return all user's decks
-        return ResponseEntity.ok(deckService.getByOwnerId(ownerId));
+        return ResponseEntity.ok(deckService.getByOwnerId(ownerId, pageable));
     }
 
     @PreAuthorize("hasRole('USER')")

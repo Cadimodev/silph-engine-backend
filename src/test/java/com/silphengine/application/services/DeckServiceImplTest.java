@@ -19,6 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,14 +52,12 @@ public class DeckServiceImplTest {
 
     private DeckService deckService;
 
-
     private Deck deck;
     private DeckResponse deckResponse;
     private User owner;
     private Card card;
     private DeckRequest deckRequest;
     private DeckCard deckCard;
-
 
     @BeforeEach
     void setUp() {
@@ -214,38 +216,59 @@ public class DeckServiceImplTest {
     }
 
     @Test
-    void getByOwnerId_shouldReturnListOfDeckResponse() {
+    void getByOwnerId_shouldReturnPageOfDeckResponse() {
 
         // Given
-        when(deckRepository.findByOwnerId(any(UUID.class))).thenReturn(List.of(deck));
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Deck> deckPage = new PageImpl<>(List.of(deck), pageable, 1);
+        
+        when(deckRepository.findByOwnerId(eq(owner.getId()), eq(pageable))).thenReturn(deckPage);
         when(deckMapper.toResponse(eq(deck))).thenReturn(deckResponse);
 
-
         // When
-        List<DeckResponse> result = deckService.getByOwnerId(owner.getId());
+        Page<DeckResponse> result = deckService.getByOwnerId(owner.getId(), pageable);
 
         // Then
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        verify(deckRepository, times(1)).findByOwnerId(owner.getId());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(deckResponse.name(), result.getContent().getFirst().name());
+        
+        verify(deckRepository, times(1)).findByOwnerId(owner.getId(), pageable);
     }
 
     @Test
-    void getByOwnerIdAndDeckName_shouldReturnDeckResponse_whenDeckExists() {
+    void getByOwnerIdAndDeckName_shouldReturnPageWithDeckResponse_whenDeckExists() {
 
         // Given
+        Pageable pageable = PageRequest.of(0, 10);
         when(deckRepository.findByOwnerIdAndName(any(UUID.class), eq(deckRequest.name()))).thenReturn(Optional.of(deck));
         when(deckMapper.toResponse(eq(deck))).thenReturn(deckResponse);
 
-
         // When
-        List<DeckResponse> result = deckService.getByOwnerIdAndDeckName(owner.getId(), deckRequest.name());
+        Page<DeckResponse> result = deckService.getByOwnerIdAndDeckName(owner.getId(), deckRequest.name(), pageable);
 
         // Then
         assertNotNull(result);
-        assertFalse(result.isEmpty());
-        assertEquals(deckResponse.name(), result.getFirst().name());
-        assertEquals(deckResponse.id(), result.getFirst().id());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(deckResponse.name(), result.getContent().getFirst().name());
+        verify(deckRepository, times(1)).findByOwnerIdAndName(owner.getId(), deckRequest.name());
+    }
+    
+    @Test
+    void getByOwnerIdAndDeckName_shouldReturnEmptyPage_whenDeckDoesNotExists() {
+
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        when(deckRepository.findByOwnerIdAndName(any(UUID.class), eq(deckRequest.name()))).thenReturn(Optional.empty());
+
+        // When
+        Page<DeckResponse> result = deckService.getByOwnerIdAndDeckName(owner.getId(), deckRequest.name(), pageable);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(0, result.getTotalElements());
+        assertTrue(result.isEmpty());
         verify(deckRepository, times(1)).findByOwnerIdAndName(owner.getId(), deckRequest.name());
     }
 

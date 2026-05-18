@@ -16,10 +16,14 @@ import com.silphengine.infrastructure.repositories.CardRepository;
 import com.silphengine.infrastructure.repositories.DeckRepository;
 import com.silphengine.infrastructure.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -70,22 +74,26 @@ public class DeckServiceImpl implements DeckService {
     }
 
     @Override
-    public List<DeckResponse> getByOwnerId(UUID ownerId) {
+    public Page<DeckResponse> getByOwnerId(UUID ownerId, Pageable pageable) {
 
-        // TODO: Add pagination to this
-        return deckRepository.findByOwnerId(ownerId)
-                .stream()
-                .map(deckMapper::toResponse)
-                .toList();
+         Page<Deck> deckPage = deckRepository.findByOwnerId(ownerId, pageable);
+
+         return deckPage.map(deckMapper::toResponse);
     }
 
     @Override
-    public List<DeckResponse> getByOwnerIdAndDeckName(UUID ownerId, String deckName) {
+    public Page<DeckResponse> getByOwnerIdAndDeckName(UUID ownerId, String deckName, Pageable pageable) {
 
-        return deckRepository.findByOwnerIdAndName(ownerId, deckName)
-                .map(deckMapper::toResponse)
-                .map(List::of)
-                .orElseGet(List::of);
+        Optional<Deck> deck = deckRepository.findByOwnerIdAndName(ownerId, deckName);
+
+        if (deck.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        DeckResponse response = deckMapper.toResponse(deck.get());
+        List<DeckResponse> content = List.of(response);
+
+        return new PageImpl<>(content, pageable, 1);
     }
 
     @Override

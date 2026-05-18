@@ -21,12 +21,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -200,35 +205,38 @@ public class DeckControllerTest {
         String deckName2 = "Second Deck";
         DeckCardResponse deckCardResponse = new DeckCardResponse(getDefaultCardResponse(getDefaultCard()), 4);
 
-        DeckResponse response1 = new DeckResponse(deckId, ownerId, deckName, false, List.of(deckCardResponse));
-        DeckResponse response2 = new DeckResponse(deckId, ownerId, deckName2, false, List.of(deckCardResponse));
+        Pageable pageable = PageRequest.of(0, 10);
+        List<DeckResponse> deckResponseList = new ArrayList<>();
+        deckResponseList.add(new DeckResponse(deckId, ownerId, deckName, false, List.of(deckCardResponse)));
+        deckResponseList.add(new DeckResponse(deckId, ownerId, deckName2, false, List.of(deckCardResponse)));
+        Page<DeckResponse> response = new PageImpl<>(deckResponseList, pageable, deckResponseList.size());
 
-        when(deckService.getByOwnerId(eq(ownerId))).thenReturn(List.of(response1, response2));
+        when(deckService.getByOwnerId(eq(ownerId), any(Pageable.class))).thenReturn(response);
 
         // When & Then
         mockMvc.perform(get("/api/v1/decks/me")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(2))));
+                .andExpect(jsonPath("$.totalElements").value(2));
 
     }
 
     @Test
     @WithMockCustomUser
-    void getMyDecks_shouldReturnOkAndEmptyList_whenUserHasNoDecks() throws Exception {
+    void getMyDecks_shouldReturnOkAndEmptyPage_whenUserHasNoDecks() throws Exception {
 
         // Given
         UUID ownerId = getAuthenticatedUserId();
 
-        when(deckService.getByOwnerId(eq(ownerId))).thenReturn(List.of());
+        when(deckService.getByOwnerId(eq(ownerId), any(Pageable.class))).thenReturn(Page.empty());
 
         // When & Then
         mockMvc.perform(get("/api/v1/decks/me")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(0)));
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 
     @Test
@@ -241,9 +249,12 @@ public class DeckControllerTest {
         String deckName = "Default Deck";
         DeckCardResponse deckCardResponse = new DeckCardResponse(getDefaultCardResponse(getDefaultCard()), 4);
 
-        DeckResponse response1 = new DeckResponse(deckId, ownerId, deckName, false, List.of(deckCardResponse));
+        Pageable pageable = PageRequest.of(0, 10);
+        List<DeckResponse> deckResponseList = new ArrayList<>();
+        deckResponseList.add(new DeckResponse(deckId, ownerId, deckName, false, List.of(deckCardResponse)));
+        Page<DeckResponse> response = new PageImpl<>(deckResponseList, pageable, deckResponseList.size());
 
-        when(deckService.getByOwnerIdAndDeckName(eq(ownerId), eq(deckName))).thenReturn(List.of(response1));
+        when(deckService.getByOwnerIdAndDeckName(eq(ownerId), eq(deckName), any(Pageable.class))).thenReturn(response);
 
         // When & Then
         mockMvc.perform(get("/api/v1/decks/me")
@@ -251,7 +262,7 @@ public class DeckControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
+                .andExpect(jsonPath("$.totalElements").value(1));
 
     }
 

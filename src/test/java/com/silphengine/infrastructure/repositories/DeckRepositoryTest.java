@@ -8,6 +8,9 @@ import com.silphengine.infrastructure.AbstractRepositoryIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -35,7 +38,7 @@ public class DeckRepositoryTest extends AbstractRepositoryIntegrationTest {
     private TestEntityManager entityManager;
 
     @Test
-    void findByOwnerId_shouldReturnListOfDecks_whenUserExists() {
+    void findByOwnerId_shouldReturnPageOfDecks_whenUserExists() {
 
         // Given
         User user = createDefaultUser("testuser", "test@user.com");
@@ -48,13 +51,15 @@ public class DeckRepositoryTest extends AbstractRepositoryIntegrationTest {
 
         deckRepository.save(deck);
 
+        Pageable pageable = PageRequest.of(0, 10);
+
         // When
-        List<Deck> foundDecks = deckRepository.findByOwnerId(user.getId());
+        Page<Deck> foundDecks = deckRepository.findByOwnerId(user.getId(), pageable);
 
         // Then
         assertThat(foundDecks).isNotEmpty();
         assertThat(foundDecks).hasSize(1);
-        assertThat(foundDecks.getFirst().getOwner().getId()).isEqualTo(user.getId());
+        assertThat(foundDecks.getContent().getFirst().getOwner().getId()).isEqualTo(user.getId());
     }
 
     @Test
@@ -62,9 +67,10 @@ public class DeckRepositoryTest extends AbstractRepositoryIntegrationTest {
 
         // Given
         UUID nonExistingId = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 10);
 
         // When
-        List<Deck> foundDecks = deckRepository.findByOwnerId(nonExistingId);
+        Page<Deck> foundDecks = deckRepository.findByOwnerId(nonExistingId, pageable);
 
         // Then
         assertThat(foundDecks).isEmpty();
