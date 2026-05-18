@@ -7,6 +7,8 @@ import com.silphengine.domain.entities.User;
 import com.silphengine.domain.services.InventoryCardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,10 +37,11 @@ public class InventoryCardController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping
-    public ResponseEntity<List<InventoryCardResponse>> getCollection(
-            @AuthenticationPrincipal User user) {
+    public ResponseEntity<Page<InventoryCardResponse>> getCollection(
+            @AuthenticationPrincipal User user,
+            Pageable pageable) {
         
-        return ResponseEntity.ok(inventoryCardService.getCollection(user.getId()));
+        return ResponseEntity.ok(inventoryCardService.getCollection(user.getId(), pageable));
     }
 
     @PreAuthorize("hasRole('USER')")

@@ -23,6 +23,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 
 import java.util.List;
@@ -203,19 +207,23 @@ public class InventoryCardServiceImplTest {
     }
 
     @Test
-    void getCollection_shouldReturnListOfInventoryCardResponse() {
+    void getCollection_shouldReturnPageOfInventoryCardResponse() {
 
         // Given
-        when(inventoryCardRepository.findByOwnerId(eq(owner.getId()))).thenReturn(List.of(inventoryCard));
+        List<InventoryCard> inventoryCardListcardList = List.of(inventoryCard);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<InventoryCard> inventoryCardPage = new PageImpl<>(inventoryCardListcardList, pageable, inventoryCardListcardList.size());
+
+        when(inventoryCardRepository.findByOwnerId(eq(owner.getId()), any(Pageable.class))).thenReturn(inventoryCardPage);
 
         // When
-        List<InventoryCardResponse> result = inventoryCardService.getCollection(owner.getId());
+        Page<InventoryCardResponse> result = inventoryCardService.getCollection(owner.getId(), pageable);
 
         // Then
         assertNotNull(result);
         assertFalse(result.isEmpty());
 
-        verify(inventoryCardRepository, times(1)).findByOwnerId(owner.getId());
+        verify(inventoryCardRepository, times(1)).findByOwnerId(owner.getId(), pageable);
     }
 
     @Test

@@ -19,6 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,6 +30,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -116,21 +121,24 @@ public class InventoryCardControllerTest {
 
     @Test
     @WithMockCustomUser
-    void getCollection_shouldReturnOkAndListOfInventoryCardResponse_whenRequestIsValid() throws Exception{
+    void getCollection_shouldReturnOkAndPageOfInventoryCardResponse_whenRequestIsValid() throws Exception{
 
         // Given
         UUID ownerId = getAuthenticatedUserId();
         UUID inventoryCardId = UUID.randomUUID();
-        InventoryCardResponse response = new InventoryCardResponse(inventoryCardId, getDefaultCardResponse(getDefaultCard()), 1, CardCondition.NEAR_MINT, CardFinish.NORMAL);
+        Pageable pageable = PageRequest.of(0, 10);
+        List<InventoryCardResponse> inventoryCardResponseList = new ArrayList<>();
+        inventoryCardResponseList.add(new InventoryCardResponse(inventoryCardId, getDefaultCardResponse(getDefaultCard()), 1, CardCondition.NEAR_MINT, CardFinish.NORMAL));
+        Page<InventoryCardResponse> response = new PageImpl<>(inventoryCardResponseList, pageable, inventoryCardResponseList.size());
 
-        when(inventoryCardService.getCollection(eq(ownerId))).thenReturn(List.of(response));
+        when(inventoryCardService.getCollection(eq(ownerId), any(Pageable.class))).thenReturn(response);
 
         // When & Then
         mockMvc.perform(get("/api/v1/collection")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test

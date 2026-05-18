@@ -10,6 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -76,7 +79,7 @@ public class InventoryCardRepositoryTest extends AbstractRepositoryIntegrationTe
     }
 
     @Test
-    void findByOwnerId_shouldReturnListOfInventoryCards_whenUserExists() {
+    void findByOwnerId_shouldReturnPageOfInventoryCards_whenUserExists() {
 
         // Given
         User user = createDefaultUser("testuser", "test@user.com");
@@ -99,12 +102,14 @@ public class InventoryCardRepositoryTest extends AbstractRepositoryIntegrationTe
         user.addInventoryCard(inventoryCard);
         inventoryCardRepository.saveAndFlush(inventoryCard);
 
+        Pageable pageable = PageRequest.of(0, 10);
+
         // When
-        List<InventoryCard> collection = inventoryCardRepository.findByOwnerId(user.getId());
+        Page<InventoryCard> inventoryCardPage = inventoryCardRepository.findByOwnerId(user.getId(), pageable);
 
         // Then
-        assertThat(collection).isNotEmpty();
-        assertThat(collection.getFirst().getId()).isEqualTo(inventoryCard.getId());
+        assertThat(inventoryCardPage).isNotEmpty();
+        assertThat(inventoryCardPage.getContent().getFirst().getId()).isEqualTo(inventoryCard.getId());
 
     }
 
@@ -113,12 +118,13 @@ public class InventoryCardRepositoryTest extends AbstractRepositoryIntegrationTe
 
         // Given
         UUID nonExistingUserId = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 10);
 
         // When
-        List<InventoryCard> collection = inventoryCardRepository.findByOwnerId(nonExistingUserId);
+        Page<InventoryCard> inventoryCardPage = inventoryCardRepository.findByOwnerId(nonExistingUserId, pageable);
 
         // Then
-        assertThat(collection).isEmpty();
+        assertThat(inventoryCardPage).isEmpty();
     }
 
     @Test

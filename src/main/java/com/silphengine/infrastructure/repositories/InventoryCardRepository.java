@@ -3,6 +3,8 @@ package com.silphengine.infrastructure.repositories;
 import com.silphengine.domain.entities.InventoryCard;
 import com.silphengine.domain.enums.CardCondition;
 import com.silphengine.domain.enums.CardFinish;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,7 +13,7 @@ import java.util.UUID;
 
 public interface InventoryCardRepository extends JpaRepository<InventoryCard, UUID> {
 
-    List<InventoryCard> findByOwnerId(UUID ownerId);
+    Page<InventoryCard> findByOwnerId(UUID ownerId, Pageable pageable);
 
     List<InventoryCard> findByOwnerIdAndCardId(UUID ownerId, UUID cardId);
     

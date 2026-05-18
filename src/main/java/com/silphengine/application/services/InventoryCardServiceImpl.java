@@ -13,6 +13,8 @@ import com.silphengine.infrastructure.repositories.CardRepository;
 import com.silphengine.infrastructure.repositories.InventoryCardRepository;
 import com.silphengine.infrastructure.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -62,13 +64,11 @@ public class InventoryCardServiceImpl implements InventoryCardService {
     }
 
     @Override
-    public List<InventoryCardResponse> getCollection(UUID ownerID) {
-        
-        // TODO: Add pagination to this
-        return inventoryCardRepository.findByOwnerId(ownerID)
-                .stream()
-                .map(inventoryCardMapper::toResponse)
-                .toList();
+    public Page<InventoryCardResponse> getCollection(UUID ownerID, Pageable pageable) {
+
+        Page<InventoryCard> inventoryCardPage = inventoryCardRepository.findByOwnerId(ownerID, pageable);
+
+        return inventoryCardPage.map(inventoryCardMapper::toResponse);
     }
 
     @Override
