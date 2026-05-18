@@ -13,6 +13,8 @@ import com.silphengine.infrastructure.repositories.CardRepository;
 import com.silphengine.infrastructure.repositories.ExpansionRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,22 +55,20 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public List<CardResponse> getAllCards() {
+    public Page<CardResponse> getAllCards(Pageable pageable) {
 
-        // TODO: Add pagination to this
-        return cardRepository.findAll()
-                .stream()
-                .map(cardMapper::toResponse)
-                .toList();
+        Page<Card> cardPage = cardRepository.findAll(pageable);
+
+        return cardPage.map(cardMapper::toResponse);
+
     }
 
     @Override
-    public List<CardResponse> getByExternalExpansionId(String externalExpansionId) {
+    public Page<CardResponse> getByExternalExpansionId(String externalExpansionId, Pageable pageable) {
 
-        return cardRepository.findByExpansion_ExternalId(externalExpansionId)
-                .stream()
-                .map(cardMapper::toResponse)
-                .toList();
+        Page<Card> cardPage = cardRepository.findByExpansion_ExternalId(externalExpansionId, pageable);
+
+        return cardPage.map(cardMapper::toResponse);
     }
 
     @Override

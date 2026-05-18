@@ -6,6 +6,8 @@ import com.silphengine.domain.exceptions.BadRequestException;
 import com.silphengine.domain.services.CardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,14 +36,15 @@ public class CardController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CardResponse>> getCards(
-            @RequestParam(required = false) String expansion) {
+    public ResponseEntity<Page<CardResponse>> getCards(
+            @RequestParam(required = false) String expansion,
+            Pageable pageable) {
 
         if (expansion != null) {
-            return ResponseEntity.ok(cardService.getByExternalExpansionId(expansion));
+            return ResponseEntity.ok(cardService.getByExternalExpansionId(expansion, pageable));
         }
 
-        return ResponseEntity.ok(cardService.getAllCards());
+        return ResponseEntity.ok(cardService.getAllCards(pageable));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

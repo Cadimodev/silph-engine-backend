@@ -10,6 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -103,9 +106,10 @@ public class CardRepositoryTest extends AbstractRepositoryIntegrationTest {
                 .build();
 
         cardRepository.save(card2);
+        Pageable pageable = PageRequest.of(0, 10);
         
         // When
-        List<Card> foundCards = cardRepository.findByExpansion_ExternalId(expansionExternalId);
+        Page<Card> foundCards = cardRepository.findByExpansion_ExternalId(expansionExternalId, pageable);
 
         // Then
         assertThat(foundCards).isNotEmpty();

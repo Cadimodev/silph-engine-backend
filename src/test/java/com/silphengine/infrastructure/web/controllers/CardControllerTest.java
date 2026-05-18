@@ -2,6 +2,7 @@ package com.silphengine.infrastructure.web.controllers;
 
 import com.silphengine.domain.dto.requests.CardRequest;
 import com.silphengine.domain.dto.responses.CardResponse;
+import com.silphengine.domain.entities.Card;
 import com.silphengine.domain.enums.CardCategory;
 import com.silphengine.domain.enums.CardType;
 import com.silphengine.domain.exceptions.BadRequestException;
@@ -16,6 +17,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -223,7 +228,7 @@ public class CardControllerTest {
     }
 
     @Test
-    void getCards_shouldReturnOkAndListOfCardResponse_whenExpansionParamIsEmpty() throws Exception {
+    void getCards_shouldReturnOkAndPageOfCardResponse_whenExpansionParamIsEmpty() throws Exception {
 
         //Given
         String externalId = "sv02-203";
@@ -242,22 +247,24 @@ public class CardControllerTest {
         List<CardType> typesEnum2 = List.of();
         String imageUrl2 = "https://assets.tcgdex.net/en/sv/sv02/269/high.png";
 
-        List<CardResponse> response = new ArrayList<>();
-        response.add(new CardResponse(externalId, name, rarity, cardCategoryEnum, typesEnum, imageUrl, expansionExternalId, regulationMark));
-        response.add(new CardResponse(externalId2, name2, rarity2, cardCategoryEnum2, typesEnum2, imageUrl2, expansionExternalId, regulationMark));
+        Pageable pageable = PageRequest.of(0, 10);
+        List<CardResponse> cardResponseList = new ArrayList<>();
+        cardResponseList.add(new CardResponse(externalId, name, rarity, cardCategoryEnum, typesEnum, imageUrl, expansionExternalId, regulationMark));
+        cardResponseList.add(new CardResponse(externalId2, name2, rarity2, cardCategoryEnum2, typesEnum2, imageUrl2, expansionExternalId, regulationMark));
+        Page<CardResponse> response = new PageImpl<>(cardResponseList, pageable, cardResponseList.size());
 
-        when(cardService.getAllCards()).thenReturn(response);
+        when(cardService.getAllCards(any(Pageable.class))).thenReturn(response);
 
         // When & Then
         mockMvc.perform(get("/api/v1/cards")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(2))));
+                .andExpect(jsonPath("$.totalElements").value(2));
     }
 
     @Test
-    void getCards_shouldReturnOkAndListOfCardResponse_whenExpansionParamHasValue() throws Exception {
+    void getCards_shouldReturnOkAndPageOfCardResponse_whenExpansionParamHasValue() throws Exception {
 
         //Given
         String externalId = "sv02-203";
@@ -276,11 +283,13 @@ public class CardControllerTest {
         List<CardType> typesEnum2 = List.of();
         String imageUrl2 = "https://assets.tcgdex.net/en/sv/sv02/269/high.png";
 
-        List<CardResponse> response = new ArrayList<>();
-        response.add(new CardResponse(externalId, name, rarity, cardCategoryEnum, typesEnum, imageUrl, expansionExternalId, regulationMark));
-        response.add(new CardResponse(externalId2, name2, rarity2, cardCategoryEnum2, typesEnum2, imageUrl2, expansionExternalId, regulationMark));
+        Pageable pageable = PageRequest.of(0, 10);
+        List<CardResponse> cardResponseList = new ArrayList<>();
+        cardResponseList.add(new CardResponse(externalId, name, rarity, cardCategoryEnum, typesEnum, imageUrl, expansionExternalId, regulationMark));
+        cardResponseList.add(new CardResponse(externalId2, name2, rarity2, cardCategoryEnum2, typesEnum2, imageUrl2, expansionExternalId, regulationMark));
+        Page<CardResponse> response = new PageImpl<>(cardResponseList, pageable, cardResponseList.size());
 
-        when(cardService.getByExternalExpansionId(expansionExternalId)).thenReturn(response);
+        when(cardService.getByExternalExpansionId(eq(expansionExternalId), any(Pageable.class))).thenReturn(response);
 
         // When & Then
         mockMvc.perform(get("/api/v1/cards")
@@ -288,7 +297,7 @@ public class CardControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(2)));
+                .andExpect(jsonPath("$.totalElements").value(2));
     }
 
     @Test

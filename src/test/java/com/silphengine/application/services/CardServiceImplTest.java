@@ -19,6 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -171,32 +175,38 @@ public class CardServiceImplTest {
     }
 
     @Test
-    void getAllCards_shouldReturnListOfCardResponse() {
+    void getAllCards_shouldReturnPageOfCardResponse() {
 
         // Given
-        when(cardRepository.findAll()).thenReturn(List.of(card));
+        List<Card> cardList = List.of(card);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Card> cardPage = new PageImpl<>(cardList, pageable, cardList.size());
+        when(cardRepository.findAll(pageable)).thenReturn(cardPage);
 
         // When
-        List<CardResponse> result = cardService.getAllCards();
+        Page<CardResponse> result = cardService.getAllCards(pageable);
 
         // Then
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        verify(cardRepository, times(1)).findAll();
+        verify(cardRepository, times(1)).findAll(pageable);
     }
 
     @Test
-    void getByExternalExpansionId_shouldReturnListOfCardResponse() {
+    void getByExternalExpansionId_shouldReturnPageOfCardResponse() {
 
         // Given
-        when(cardRepository.findByExpansion_ExternalId(externalExpansionId)).thenReturn(List.of(card));
+        List<Card> cardList = List.of(card);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Card> cardPage = new PageImpl<>(cardList, pageable, cardList.size());
+        when(cardRepository.findByExpansion_ExternalId(externalExpansionId, pageable)).thenReturn(cardPage);
 
         // When
-        List<CardResponse> result = cardService.getByExternalExpansionId(externalExpansionId);
+        Page<CardResponse> result = cardService.getByExternalExpansionId(externalExpansionId, pageable);
 
         // Then
         assertNotNull(result);
-        verify(cardRepository, times(1)).findByExpansion_ExternalId(externalExpansionId);
+        verify(cardRepository, times(1)).findByExpansion_ExternalId(externalExpansionId, pageable);
     }
 
     @Test
