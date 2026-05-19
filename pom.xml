@@ -189,12 +189,6 @@
 					<argLine>-XX:+EnableDynamicAgentLoading</argLine>
 					<forkCount>1</forkCount>
 					<reuseForks>false</reuseForks>
-					<systemPropertyVariables>
-						<logging.level.org.springframework.web>DEBUG</logging.level.org.springframework.web>
-						<logging.level.org.springframework.security>DEBUG</logging.level.org.springframework.security>
-						<logging.level.org.springdoc>DEBUG</logging.level.org.springdoc>
-						<logging.level.com.silphengine>DEBUG</logging.level.com.silphengine>
-					</systemPropertyVariables>
 				</configuration>
 			</plugin>
 		</plugins>
