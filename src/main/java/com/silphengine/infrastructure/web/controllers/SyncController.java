@@ -4,9 +4,11 @@ import com.silphengine.domain.services.CardCatalogSyncService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/admin/sync")
@@ -16,10 +18,13 @@ public class SyncController {
     private final CardCatalogSyncService cardCatalogSyncService;
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
-    public ResponseEntity<Void> syncAll() {
+    @PostMapping
+    public ResponseEntity<Map<String, String>> syncAll() {
 
         cardCatalogSyncService.syncAll();
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.accepted().body(Map.of(
+                "status", "Accepted",
+                "message", "Full catalog synchronization started in the background. Check server logs for progress."
+        ));
     }
 }

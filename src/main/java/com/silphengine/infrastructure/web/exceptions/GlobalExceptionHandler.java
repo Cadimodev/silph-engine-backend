@@ -4,6 +4,7 @@ import com.silphengine.domain.exceptions.BadRequestException;
 import com.silphengine.domain.exceptions.DuplicateResourceException;
 import com.silphengine.domain.exceptions.ResourceNotFoundException;
 import com.silphengine.domain.exceptions.TokenRefreshException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -19,6 +20,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -81,6 +83,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGlobalException(Exception ex) {
+        log.error("Unhandled exception caught: ", ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred.");
     }
 

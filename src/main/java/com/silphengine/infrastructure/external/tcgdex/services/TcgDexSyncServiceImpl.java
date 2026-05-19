@@ -13,7 +13,9 @@ import com.silphengine.infrastructure.repositories.CardRepository;
 import com.silphengine.infrastructure.repositories.ExpansionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 
 import java.util.ArrayList;
@@ -34,6 +36,7 @@ public class TcgDexSyncServiceImpl implements CardCatalogSyncService {
     private final CardRepository cardRepository;
 
     @Override
+    @Async
     public void syncAll() {
         log.info("Starting TCGDex Full Catalog Sync...");
         Map<Expansion, List<TcgDexSetDetailDto.CardDto>> expansionsWithCardsToSync = syncExpansions();
@@ -98,12 +101,6 @@ public class TcgDexSyncServiceImpl implements CardCatalogSyncService {
 
     private void syncCards(Map<Expansion, List<TcgDexSetDetailDto.CardDto>> expansionsWithCardsToSync) {
 
-        Map<String, Card> entitiesToSaveMap = new HashMap<>();
-
-        List<Card> existingCards = cardRepository.findByExpansionIn(expansionsWithCardsToSync.keySet());
-        Map<String, Card> cardMap = existingCards.stream()
-                .collect(Collectors.toMap(Card::getExternalId, e -> e));
-
         int totalExpansions = expansionsWithCardsToSync.size();
         int currentExpansionCount = 0;
 
@@ -114,7 +111,13 @@ public class TcgDexSyncServiceImpl implements CardCatalogSyncService {
 
             if (cardsInSet != null) {
                 log.info("Syncing {} cards for expansion '{}' ({}/{})", cardsInSet.size(), expansion.getName(), currentExpansionCount, totalExpansions);
+
+                List<Card> existingCards = cardRepository.findByExpansion(expansion);
+                Map<String, Card> cardMap = existingCards.stream()
+                        .collect(Collectors.toMap(Card::getExternalId, e -> e));
+                Map<String, Card> expansionEntitiesToSave = new HashMap<>();
                 int cardCount = 0;
+
                 for (TcgDexSetDetailDto.CardDto cardDto : cardsInSet) {
                     cardCount++;
                     try {
@@ -123,10 +126,10 @@ public class TcgDexSyncServiceImpl implements CardCatalogSyncService {
 
                         if (existingCard != null) {
                             tcgDexCardMapper.updateFromDetailDto(cardDetail, existingCard);
-                            entitiesToSaveMap.put(existingCard.getExternalId(), existingCard);
+                            expansionEntitiesToSave.put(existingCard.getExternalId(), existingCard);
                         } else {
                             Card newCard = tcgDexCardMapper.toEntity(cardDetail, expansion);
-                            entitiesToSaveMap.put(newCard.getExternalId(), newCard);
+                            expansionEntitiesToSave.put(newCard.getExternalId(), newCard);
 
                             cardMap.put(newCard.getExternalId(), newCard);
                         }
@@ -146,11 +149,15 @@ public class TcgDexSyncServiceImpl implements CardCatalogSyncService {
                         log.info("Processed {}/{} cards in '{}'...", cardCount, cardsInSet.size(), expansion.getName());
                     }
                 }
-                log.info("Finished syncing expansion '{}'.", expansion.getName());
+
+                log.info("Saving {} cards for expansion '{}' to database...", expansionEntitiesToSave.size(), expansion.getName());
+                try {
+                    cardRepository.saveAll(expansionEntitiesToSave.values());
+                } catch (Exception e) {
+                    log.error("Failed to save expansion '{}' to database: {}", expansion.getName(), e.getMessage());
+                }
+
             }
         }
-
-        log.info("Saving {} cards to database...", entitiesToSaveMap.size());
-        cardRepository.saveAll(entitiesToSaveMap.values());
     }
 }

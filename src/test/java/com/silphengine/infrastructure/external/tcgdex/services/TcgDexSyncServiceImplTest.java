@@ -65,7 +65,7 @@ class TcgDexSyncServiceImplTest {
         // We don't stub expansionRepository.saveAll(List.of(mockExpansion)) strictly, we use anyCollection()
         when(expansionRepository.saveAll(anyCollection())).thenReturn(List.of(mockExpansion));
 
-        when(cardRepository.findByExpansionIn(any())).thenReturn(Collections.emptyList());
+        when(cardRepository.findByExpansion(any())).thenReturn(Collections.emptyList());
 
         TcgDexCardDetailDto cardDetailDto = new TcgDexCardDetailDto("base1-1", "1", "Alakazam", "imageUrl", "Pokemon", null, "Rare", null, null, null, null, 100, null, null, null, null, null, null, 3, null, null, null, null);
         when(tcgDexClient.getCardById("base1-1")).thenReturn(cardDetailDto);
@@ -106,7 +106,7 @@ class TcgDexSyncServiceImplTest {
 
         Card existingCard = mock(Card.class);
         when(existingCard.getExternalId()).thenReturn("base1-1");
-        when(cardRepository.findByExpansionIn(any())).thenReturn(List.of(existingCard));
+        when(cardRepository.findByExpansion(any())).thenReturn(List.of(existingCard));
 
         TcgDexCardDetailDto cardDetailDto = new TcgDexCardDetailDto("base1-1", "1", "Alakazam Updated", "newImageUrl", "Pokemon", null, "Rare", null, null, null, null, 100, null, null, null, null, null, null, 3, null, null, null, null);
         when(tcgDexClient.getCardById("base1-1")).thenReturn(cardDetailDto);
@@ -141,7 +141,7 @@ class TcgDexSyncServiceImplTest {
          when(tcgDexExpansionMapper.toEntity(detailDto)).thenReturn(mockExpansion);
          when(expansionRepository.saveAll(anyCollection())).thenReturn(List.of(mockExpansion));
          
-         when(cardRepository.findByExpansionIn(any())).thenReturn(Collections.emptyList());
+         when(cardRepository.findByExpansion(any())).thenReturn(Collections.emptyList());
 
          when(tcgDexClient.getCardById("base1-1")).thenThrow(new RuntimeException("API Timeout for card 1"));
 
