@@ -13,7 +13,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/database/init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  backend:
+  app:
     build: .
     container_name: silph-engine-api
     restart: always
