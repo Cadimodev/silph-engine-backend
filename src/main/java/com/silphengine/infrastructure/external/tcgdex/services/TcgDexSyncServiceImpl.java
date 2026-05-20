@@ -62,6 +62,13 @@ public class TcgDexSyncServiceImpl implements CardCatalogSyncService {
                 count++;
                 try {
                     TcgDexSetDetailDto setDetail = tcgDexClient.getSetById(setSummary.id());
+
+                    if (setDetail != null && setDetail.serie() != null && "tcgp".equalsIgnoreCase(setDetail.serie().id())) {
+                        log.warn("Skipping set '{}' ({}) because it belongs to the Pokémon TCG Pocket series (tcgp).",
+                                setSummary.name(), setSummary.id());
+                        continue;
+                    }
+
                     Expansion existingExpansion = expansionMap.get(setSummary.id());
 
                     Expansion savedOrUpdatedExpansion;
