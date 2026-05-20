@@ -1,4 +1,4 @@
-package com.silphengine.infrastructure.web.controllers;
+package com.silphengine.infrastructure.web.controllers.api;
 
 import com.silphengine.domain.dto.requests.PasswordChangeRequest;
 import com.silphengine.domain.dto.requests.UserProfileRequest;

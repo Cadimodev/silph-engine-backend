@@ -1,6 +1,7 @@
 package com.silphengine.infrastructure.web.controllers;
 
 import com.silphengine.domain.exceptions.DuplicateResourceException;
+import com.silphengine.infrastructure.web.controllers.api.AuthenticationController;
 import tools.jackson.databind.json.JsonMapper;
 import com.silphengine.domain.dto.requests.LoginRequest;
 import com.silphengine.domain.dto.requests.RefreshTokenRequest;

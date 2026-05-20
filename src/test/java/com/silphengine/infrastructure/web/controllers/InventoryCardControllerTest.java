@@ -13,6 +13,7 @@ import com.silphengine.domain.enums.CardType;
 import com.silphengine.domain.exceptions.ResourceNotFoundException;
 import com.silphengine.domain.services.InventoryCardService;
 import com.silphengine.infrastructure.web.config.TestSecurityConfig;
+import com.silphengine.infrastructure.web.controllers.api.InventoryCardController;
 import com.silphengine.security.JwtService;
 import com.silphengine.security.annotations.WithMockCustomUser;
 import org.junit.jupiter.api.Test;

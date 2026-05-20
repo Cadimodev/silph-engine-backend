@@ -6,6 +6,7 @@ import com.silphengine.domain.exceptions.DuplicateResourceException;
 import com.silphengine.domain.exceptions.ResourceNotFoundException;
 import com.silphengine.domain.services.ExpansionService;
 import com.silphengine.infrastructure.web.config.TestSecurityConfig;
+import com.silphengine.infrastructure.web.controllers.api.ExpansionController;
 import com.silphengine.security.annotations.WithMockCustomUser;
 import org.springframework.context.annotation.Import;
 import tools.jackson.databind.json.JsonMapper;

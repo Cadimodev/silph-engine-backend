@@ -10,6 +10,7 @@ import com.silphengine.domain.exceptions.DuplicateResourceException;
 import com.silphengine.domain.exceptions.ResourceNotFoundException;
 import com.silphengine.domain.services.UserService;
 import com.silphengine.infrastructure.web.config.TestSecurityConfig;
+import com.silphengine.infrastructure.web.controllers.api.UserController;
 import com.silphengine.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

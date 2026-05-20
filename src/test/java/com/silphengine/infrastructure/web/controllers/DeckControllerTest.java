@@ -15,6 +15,7 @@ import com.silphengine.domain.exceptions.DuplicateResourceException;
 import com.silphengine.domain.exceptions.ResourceNotFoundException;
 import com.silphengine.domain.services.DeckService;
 import com.silphengine.infrastructure.web.config.TestSecurityConfig;
+import com.silphengine.infrastructure.web.controllers.api.DeckController;
 import com.silphengine.security.JwtService;
 import com.silphengine.security.annotations.WithMockCustomUser;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;

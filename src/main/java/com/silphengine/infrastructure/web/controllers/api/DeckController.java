@@ -1,4 +1,4 @@
-package com.silphengine.infrastructure.web.controllers;
+package com.silphengine.infrastructure.web.controllers.api;
 
 import com.silphengine.domain.dto.requests.DeckRequest;
 import com.silphengine.domain.dto.responses.DeckResponse;
@@ -14,7 +14,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
