@@ -1,0 +1,31 @@
+<nav th:fragment="app-navbar" class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary"
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/}">SilphEngine</a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
+            <div class="d-flex align-items-center">
+
+                <div sec:authorize="isAnonymous()">
+                    <a th:href="@{/login}" class="btn btn-outline-warning">Sign In</a>
+                </div>
+
+                <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-3">
+                    <span class="text-white-50">
+                        Welcome, <strong class="text-light" sec:authentication="name">User</strong>!
+                    </span>
+
+                    <form th:action="@{/logout}" method="post" class="m-0">
+                        <button type="submit" class="btn btn-sm btn-danger">Sign Out</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</nav>

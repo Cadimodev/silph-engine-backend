@@ -8,17 +8,7 @@
 </head>
 <body class="bg-dark text-light">
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-secondary shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold text-warning" href="/cards">SilphEngine</a>
-        <div class="d-flex align-items-center">
-            <span class="navbar-text me-3 small text-uppercase fw-semibold tracking-wider">Dashboard</span>
-            <form th:action="@{/logout}" method="POST" class="m-0">
-                <button type="submit" class="btn btn-outline-danger btn-sm fw-bold">Sign Out</button>
-            </form>
-        </div>
-    </div>
-</nav>
+<div th:replace="~{fragments/navbar :: app-navbar}"></div>
 
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
