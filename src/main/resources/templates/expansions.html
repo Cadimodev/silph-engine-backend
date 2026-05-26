@@ -64,20 +64,7 @@
         </div>
     </div>
 
-    <nav th:if="${page.totalPages > 1}" aria-label="Page navigation" class="mt-5">
-        <ul class="pagination justify-content-center">
-            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-                <a class="page-link bg-dark border-secondary text-warning" th:href="@{/expansions(page=${page.number - 1})}">&laquo; Previous</a>
-            </li>
-            <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" th:classappend="${page.number == i} ? 'active'">
-                <a class="page-link border-secondary" th:classappend="${page.number == i} ? 'bg-warning text-dark border-warning' : 'bg-dark text-warning'"
-                   th:href="@{/expansions(page=${i})}" th:text="${i + 1}">1</a>
-            </li>
-            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-                <a class="page-link bg-dark border-secondary text-warning" th:href="@{/expansions(page=${page.number + 1})}">Next &raquo;</a>
-            </li>
-        </ul>
-    </nav>
+    <div th:replace="~{fragments/pagination :: pager(${page}, '/expansions', null, 'justify-content-center')}"></div>
 
 </div>
 

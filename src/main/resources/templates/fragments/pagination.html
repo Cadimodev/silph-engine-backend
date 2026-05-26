@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head></head>
+<body>
+
+<div th:fragment="pager(pageObj, baseUrl, searchQuery, justifyClass)">
+    <nav th:if="${pageObj.totalPages > 1}" aria-label="Page navigation" class="mt-5">
+        <ul class="pagination" th:classappend="${justifyClass != null ? justifyClass : 'justify-content-center'}">
+
+            <li class="page-item" th:classappend="${pageObj.first} ? 'disabled'">
+                <a class="page-link bg-dark border-secondary text-warning"
+                   th:href="@{__${baseUrl}__(page=${pageObj.number - 1}, search=${searchQuery})}">&laquo; Previous</a>
+            </li>
+
+            <li class="page-item"
+                th:each="i : ${#numbers.sequence(0, pageObj.totalPages - 1)}"
+                th:classappend="${pageObj.number == i} ? 'active'">
+
+                <a class="page-link border-secondary"
+                   th:classappend="${pageObj.number == i} ? 'bg-warning text-dark border-warning' : 'bg-dark text-warning'"
+                   th:href="@{__${baseUrl}__(page=${i}, search=${searchQuery})}"
+                   th:text="${i + 1}">1</a>
+            </li>
+
+            <li class="page-item" th:classappend="${pageObj.last} ? 'disabled'">
+                <a class="page-link bg-dark border-secondary text-warning"
+                   th:href="@{__${baseUrl}__(page=${pageObj.number + 1}, search=${searchQuery})}">Next &raquo;</a>
+            </li>
+
+        </ul>
+    </nav>
+</div>
+
+</body>
+</html>
