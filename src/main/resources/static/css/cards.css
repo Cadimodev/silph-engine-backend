@@ -1,0 +1,4 @@
+body { background-color: #1a1d20; color: #f8f9fa; }
+.card { background-color: #212529; border: 1px solid #373b3e; transition: transform 0.2s; }
+.card:hover { transform: translateY(-5px); border-color: #ffcb05; }
+.card-img-container { background-color: #1a1d20; border-radius: 6px; display: flex; align-items: center; justify-content: center; }

@@ -1,0 +1,19 @@
+body {
+    background-color: #1a1d20;
+    color: #f8f9fa;
+}
+.card {
+    background-color: #212529;
+    border: 1px solid #373b3e;
+}
+.form-control {
+    background-color: #2b3035;
+    border: 1px solid #495057;
+    color: #fff;
+}
+.form-control:focus {
+    background-color: #2b3035;
+    color: #fff;
+    border-color: #ffcb05;
+    box-shadow: 0 0 0 0.25rem rgba(255, 203, 5, 0.25);
+}
