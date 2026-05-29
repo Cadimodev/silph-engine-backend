@@ -16,12 +16,11 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h2 fw-bold text-warning mb-0"
-                th:text="${expansionName != null} ? 'Set: ' + ${expansionName} : (${searchQuery != null} ? 'Search Results' : 'Card Catalog')">
+                th:text="${expansionName != null} ? 'Expansion: ' + ${expansionName} : (${searchQuery != null} ? 'Search Results' : (${baseUrl == '/collection'} ? 'My Collection' : 'Card Catalog'))">
                 Card Catalog
             </h1>
             <p class="text-white-50 small mb-0"
-               th:text="${searchQuery != null} ? 'Showing results for: ' + ${searchQuery} : 'Explore synchronized database records'">
-                Explore synchronized database records
+               th:text="${searchQuery != null} ? 'Showing results for: ' + ${searchQuery} : ''">
             </p>
         </div>
         <span class="badge bg-warning text-dark fs-6 px-3 py-2 fw-bold" th:text="${totalItems} + ' Cards Found'">0 Cards</span>
@@ -52,7 +51,7 @@
                         </div>
 
                         <div class="small text-white-50 mb-1" th:if="${card.types != null and !card.types.isEmpty()}">
-                            <span class="fw-bold text-secondary">Types:</span>
+                            <span class="fw-bold text-secondary">Type:</span>
                             <span th:each="type, iterStat : ${card.types}">
                                 <span th:text="${type}">Fire</span><th:block th:if="${!iterStat.last}">, </th:block>
                             </span>

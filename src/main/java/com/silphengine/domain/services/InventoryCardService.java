@@ -15,6 +15,8 @@ public interface InventoryCardService {
 
     Page<InventoryCardResponse> getCollection(UUID ownerID, Pageable pageable);
 
+    Page<InventoryCardResponse> getUniqueCollectionCards(UUID ownerId, Pageable pageable);
+
     List<InventoryCardResponse> getInventoryCardsByCardId(UUID cardId, UUID ownerID);
 
     InventoryCardResponse getInventoryCard(UUID inventoryCardId, UUID ownerID);

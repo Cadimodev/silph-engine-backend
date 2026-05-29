@@ -24,6 +24,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final JwtService jwtService;
