@@ -37,6 +37,7 @@ public class InventoryCardServiceImpl implements InventoryCardService {
     private final CardRepository cardRepository;
 
     @Override
+    @Transactional
     public InventoryCardResponse createInventoryCard(InventoryCardRequest request, UUID ownerId) {
 
         User user = userRepository.findById(ownerId).orElseThrow(
@@ -100,6 +101,7 @@ public class InventoryCardServiceImpl implements InventoryCardService {
     }
 
     @Override
+    @Transactional
     public InventoryCardResponse updateInventoryCard(UUID inventoryCardId, UpdateInventoryCardRequest request, UUID ownerID) {
 
         InventoryCard inventoryCard  = inventoryCardRepository.findById(inventoryCardId).orElseThrow(
@@ -116,6 +118,7 @@ public class InventoryCardServiceImpl implements InventoryCardService {
     }
 
     @Override
+    @Transactional
     public void deleteInventoryCard(UUID inventoryCardId, UUID ownerID) {
 
         InventoryCard inventoryCard  = inventoryCardRepository.findById(inventoryCardId).orElseThrow(
@@ -126,6 +129,5 @@ public class InventoryCardServiceImpl implements InventoryCardService {
         }
 
         inventoryCardRepository.delete(inventoryCard);
-
     }
 }
