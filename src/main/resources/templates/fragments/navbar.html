@@ -3,14 +3,33 @@
      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
     <link rel="stylesheet" th:href="@{/css/navbar.css}">
     <div class="container">
-        <a class="navbar-brand" th:href="@{/}">Silph Engine</a>
+        <a class="navbar-brand text-warning fw-bold" th:href="@{/}">Silph Engine</a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
-            <div class="d-flex align-items-center">
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 text-center">
+
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold"
+                       th:href="@{/expansions}">Expansions</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold"
+                       th:href="@{/collection}">Collection</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold"
+                       th:href="@{/decks}">Decks</a>
+                </li>
+
+            </ul>
+
+            <div class="d-flex align-items-center bootstrap-auth-block">
 
                 <div sec:authorize="isAnonymous()">
                     <a th:href="@{/login}" class="btn btn-outline-warning">Sign In</a>
