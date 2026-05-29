@@ -17,6 +17,8 @@ public interface CardService {
 
     Page<CardResponse> getByExternalExpansionId(String externalExpansionId, Pageable pageable);
 
+    Page<CardResponse> getCardsByName(String name, Pageable pageable);
+
     CardResponse updateByExternalId(String externalId, CardRequest cardRequest);
 
     void deleteByExternalId(String externalId);

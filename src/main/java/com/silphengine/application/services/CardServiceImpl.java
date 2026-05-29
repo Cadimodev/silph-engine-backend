@@ -72,6 +72,14 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    public Page<CardResponse> getCardsByName(String name, Pageable pageable) {
+
+        Page<Card> cardsPage = cardRepository.findByNameContainingIgnoreCase(name, pageable);
+
+        return cardsPage.map(cardMapper::toResponse);
+    }
+
+    @Override
     @Transactional
     public CardResponse updateByExternalId(String externalId, CardRequest cardRequest) {
 

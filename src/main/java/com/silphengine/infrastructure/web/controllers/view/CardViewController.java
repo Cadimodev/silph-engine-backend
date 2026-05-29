@@ -63,6 +63,23 @@ public class CardViewController {
         return "cards";
     }
 
+    @GetMapping("/cards/live")
+    public String liveSearch(
+            @RequestParam String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            Model model) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "expansion.releaseDate"));
+
+        Page<CardResponse> cardPage = cardService.getCardsByName(search, pageable);
+
+        populateModel(model, cardPage, "/cards", null);
+        model.addAttribute("searchQuery", search);
+
+        return "cards :: #liveSearchResults";
+    }
+
     private void populateModel(Model model, Page<CardResponse> cardPage, String baseUrl, String expansionName) {
         model.addAttribute("cards", cardPage.getContent());
         model.addAttribute("page", cardPage);

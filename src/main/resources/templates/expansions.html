@@ -6,6 +6,7 @@
     <title>Silph Engine - Expansions</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/expansions.css}">
+    <link rel="stylesheet" th:href="@{/css/cards.css}">
 </head>
 <body>
 
@@ -16,51 +17,97 @@
     <div class="row justify-content-center mb-5">
         <div class="col-md-8 text-center">
             <h2 class="mb-3 text-white-50">Explore the Backend Ecosystem</h2>
-            <form th:action="@{/cards}" method="get">
-                <input type="text" name="search" class="form-control form-control-lg bg-dark text-white border-secondary"
-                       placeholder="🔍 Search for cards globally... (e.g., Pikachu, Raging Bolt)">
+            <form id="globalSearchForm" onsubmit="return false;">
+                <input type="text" id="globalSearchInput" class="form-control form-control-lg bg-dark text-white border-secondary"
+                       placeholder="🔍 Search for cards globally... (e.g., Pikachu, Raging Bolt)" autocomplete="off">
             </form>
         </div>
     </div>
 
-    <div class="mb-4">
-        <span class="text-white-50 me-3">Series Filter:</span>
-        <div class="btn-group" role="group">
-            <a href="#" class="btn btn-sm btn-warning fw-bold">ALL</a>
-            <a href="#" class="btn btn-sm btn-outline-secondary text-light">Scarlet & Violet</a>
-            <a href="#" class="btn btn-sm btn-outline-secondary text-light">Sword & Shield</a>
-        </div>
-    </div>
+    <div id="dynamicContent">
 
-    <h3 class="text-warning fw-bold mb-4">Expansions</h3>
+        <h3 class="text-warning fw-bold mb-4">Expansions</h3>
 
-    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
-        <div class="col" th:each="exp : ${expansions}">
-            <div class="card h-100 p-3 rounded-3 shadow-sm">
-
-                <div class="img-container mb-3">
-                    <img th:src="${exp.logoUrl != null ? exp.logoUrl + '.png' : 'https://via.placeholder.com/150x80?text=No+Logo'}"
-                         alt="Expansion Logo" class="logo-img">
+        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+            <div class="col" th:each="exp : ${expansions}">
+                <div class="card h-100 p-3 rounded-3 shadow-sm">
+                    <div class="img-container mb-3">
+                        <img th:src="${exp.logoUrl != null ? exp.logoUrl + '.png' : 'https://via.placeholder.com/150x80?text=No+Logo'}"
+                             alt="Expansion Logo" class="logo-img">
+                    </div>
+                    <h5 class="card-title text-light fw-bold mb-1" th:text="${exp.name}">Paldea Evolved</h5>
+                    <div class="small text-white-50 mb-3">
+                        Code: <strong class="text-warning" th:text="${exp.externalId}">SV02</strong>
+                    </div>
+                    <div class="small mb-1">Cards: <span th:text="${exp.totalCards}">193</span></div>
+                    <div class="small text-white-50 mb-4">Released: <span th:text="${exp.releaseDate}">2023-06-09</span></div>
+                    <a th:href="@{/expansions/{id}/cards(id=${exp.externalId})}" class="btn btn-sm btn-outline-warning w-100 mt-auto">
+                        View Cards &rarr;
+                    </a>
                 </div>
-
-                <h5 class="card-title text-light fw-bold mb-1" th:text="${exp.name}">Paldea Evolved</h5>
-                <div class="small text-white-50 mb-3">
-                    Code: <strong class="text-warning" th:text="${exp.externalId}">SV02</strong>
-                </div>
-
-                <div class="small mb-1">Cards: <span th:text="${exp.totalCards}">193</span></div>
-                <div class="small text-white-50 mb-4">Released: <span th:text="${exp.releaseDate}">2023-06-09</span></div>
-
-                <a th:href="@{/expansions/{id}/cards(id=${exp.externalId})}" class="btn btn-sm btn-outline-warning w-100 mt-auto">
-                    View Cards &rarr;
-                </a>
             </div>
         </div>
+
+        <div th:replace="~{fragments/pagination :: pager(${page}, '/expansions', null, 'justify-content-center')}"></div>
+
     </div>
 
-    <div th:replace="~{fragments/pagination :: pager(${page}, '/expansions', null, 'justify-content-center')}"></div>
-
 </div>
+
+<script th:inline="javascript">
+    let debounceTimer;
+    const searchInput = document.getElementById('globalSearchInput');
+    const dynamicContent = document.getElementById('dynamicContent');
+
+    const originalExpansionsHtml = dynamicContent.innerHTML;
+
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        const query = searchInput.value.trim();
+
+        if (query.length === 0) {
+            dynamicContent.innerHTML = originalExpansionsHtml;
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            fetchCardsLive(query);
+        }, 300);
+    });
+
+    async function fetchCardsLive(query, page = 0) {
+        try {
+            const response = await fetch(`/cards/live?search=${encodeURIComponent(query)}&page=${page}`);
+            if (!response.ok) throw new Error("Search failed");
+
+            const htmlResult = await response.text();
+            dynamicContent.innerHTML = htmlResult;
+
+            bindPaginationLinks(query);
+
+        } catch (error) {
+            console.error("Error performing live search:", error);
+        }
+    }
+
+    function bindPaginationLinks(query) {
+        const paginationLinks = dynamicContent.querySelectorAll('.pagination .page-link');
+
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                const urlString = link.getAttribute('href');
+                if (!urlString || urlString === '#') return;
+
+                const url = new URL(urlString, window.location.origin);
+                const pageParam = url.searchParams.get('page') || 0;
+                
+                fetchCardsLive(query, parseInt(pageParam));
+            });
+        });
+    }
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

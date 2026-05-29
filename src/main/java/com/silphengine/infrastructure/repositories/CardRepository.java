@@ -18,4 +18,6 @@ public interface CardRepository extends JpaRepository<Card, UUID> {
     Page<Card> findByExpansion_ExternalId(String expansionExternalId, Pageable pageable);
 
     List<Card> findByExpansion(Expansion expansion);
+
+    Page<Card> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }
